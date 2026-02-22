@@ -19,6 +19,7 @@ It is **not** an installable package repository and does **not** contain full so
 
 ## Start Here (Important Links)
 
+- **[Portable Bundle Workspace: `port/README.md`](port/README.md)**
 - **[Build Guide: `OPENCODE-PORT-BUILD-GUIDE.md`](OPENCODE-PORT-BUILD-GUIDE.md)**
 - **[Release Status + Readiness: `RELEASE.md`](RELEASE.md)**
 - **[Contributing Guide: `CONTRIBUTE.md`](CONTRIBUTE.md)**
@@ -41,6 +42,7 @@ This project is split into three repos:
 
 This project is **not yet** a normal end-user install path.
 
+- A portable `.tgz` bundle workflow is being prepared in [`port/README.md`](port/README.md) for pre-`pkg_add` distribution
 - There is no official OpenBSD package in ports yet
 - `pkg_add` does not work because the port is not accepted upstream
 - Current usage is a porter/developer workflow (source + build/test)
@@ -129,6 +131,18 @@ Not included here:
 This repo keeps a small set of operational docs. Some older planning/reference material is intentionally **not** kept in the published repo.
 
 Example: the earlier publishing/ports planning draft is kept as a local reference file, while `CONTRIBUTE.md` provides the public contributor workflow.
+
+## Tmux / Terminal Color Note (OpenBSD)
+
+If the OpenCode TUI appears mostly black, low-contrast, or the input area looks "missing" in tmux, this is usually a terminal capability mismatch (not a build failure).
+
+Recommended settings:
+1. Use `xterm-256color` (or another 256-color terminal) in the terminal that attaches to tmux.
+2. Configure tmux with `default-terminal "tmux-256color"`.
+3. Enable tmux truecolor overrides for `xterm*` clients (`Tc` / RGB support).
+4. Reattach/restart existing tmux clients after changing terminal settings (already-attached clients keep their old terminal type).
+
+On our test machines, mismatched tmux client terminal types (`xterm` vs `xterm-256color`) caused visible contrast/rendering differences even when the OpenCode TUI emitted the same color escape sequences.
 
 ## OpenBSD Ports / `pkg_add` (Short Version)
 

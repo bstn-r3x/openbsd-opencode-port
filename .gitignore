@@ -35,3 +35,9 @@ ktrace.out
 # Local test reports (keep only curated markdown reports if desired)
 artifacts/*.json
 artifacts/*.sqlite
+
+# Local portable packaging workspace outputs
+port/stage/*
+!port/stage/.gitignore
+port/release/*
+!port/release/.gitignore
