@@ -13,6 +13,16 @@ Bun cannot be built natively on OpenBSD due to Zig's ELF linker bugs. Instead, Z
 | **Mac host** | Cross-compilation, codegen, Claude Code | Workspace: `<MAC_WORKSPACE>/opencode-port` |
 | **openbsd-host** (OpenBSD 7.8) | Linking, C++ compilation, runtime | `ssh openbsd-host` (192.168.x.x), Intel i5-8350U (8 cores), 16GB RAM |
 
+### Placeholder Conventions (sanitized public docs)
+
+This public repo uses placeholders in documentation to avoid publishing personal/local infrastructure identifiers.
+
+- `openbsd-host`: your OpenBSD host SSH alias (replace with your own, for example `mybsd`)
+- `<MAC_WORKSPACE>/opencode-port`: local macOS workspace root used for orchestration/codegen
+- `192.168.x.x`: redacted LAN addresses from the original private environment
+
+The recommended OpenBSD workspace path remains `/srv/opencode-port` unless you intentionally change it.
+
 ### Directory Structure
 
 **Mac (`<MAC_WORKSPACE>/opencode-port/`):**
@@ -24,7 +34,7 @@ zig-mac/                 # Mac ARM64 zig compiler (oven-sh/zig 0.15.2)
 oven-zig/lib/            # Zig standard library + OpenBSD system headers
 strip_debug_sections.py  # Python ELF stripper (removes .debug_* sections)
 opencode-src/            # OpenCode source (patched for OpenBSD)
-PLAN.md                  # Master project plan with all phases
+CHANGELOG.md             # Engineering history and technical record
 ```
 
 **openbsd-host (`/srv/opencode-port/`):**
@@ -252,7 +262,7 @@ When validating a new build or preparing a stable promotion:
 
 1. Capture command outputs and exit codes for failed checks.
 2. Save the generated baseline report under `artifacts/`.
-3. Update `PORT-STATUS.md` and this build guide when behavior or commands change.
+3. Update `RELEASE.md` and this build guide when behavior or commands change.
 4. Treat a state as release-ready only when:
    - baseline automation passes,
    - interactive source and compiled TUI checks pass,
@@ -295,7 +305,7 @@ Three changes reduce idle CPU from 40-92% to <15%:
 
 ## Files Modified from Upstream Bun
 
-See PLAN.md Phase C for the complete list (~50+ Zig files, ~20+ C++ files, CMake files). Key categories:
+See CHANGELOG.md Phase C for the complete list (~50+ Zig files, ~20+ C++ files, CMake files). Key categories:
 
 - **Platform detection**: `env.zig`, `build.zig`
 - **System calls**: `sys.zig`, `fd.zig`, `bun.zig`
@@ -304,7 +314,7 @@ See PLAN.md Phase C for the complete list (~50+ Zig files, ~20+ C++ files, CMake
 - **Node.js compat**: `node_os.zig`, `node_fs.zig`, `dir_iterator.zig`
 - **Process/spawn**: `process.zig`, `spawn.zig`, `bun-spawn.cpp`
 - **C++ bindings**: `BunProcess.cpp`, `BunObject.cpp`, `c-bindings.cpp`, `ZigGlobalObject.cpp`
-- **JSC patches**: 8 WebKit source files (see PLAN.md Phase D)
+- **JSC patches**: 8 WebKit source files (see CHANGELOG.md Phase D)
 - **CMake**: `BuildBun.cmake`, `SetupWebKit.cmake`, `SetupBun.cmake`, `SetupZig.cmake`
 
 ## Files Modified from Upstream OpenCode

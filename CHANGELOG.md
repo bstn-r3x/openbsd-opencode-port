@@ -1,4 +1,4 @@
-# Bun Port to OpenBSD 7.8 — State & Plan
+# OpenCode on OpenBSD Porting Changelog and Engineering History
 
 ## Goal
 Port Bun (JavaScript runtime) to OpenBSD 7.8 amd64, ultimately to run OpenCode v1.1.65 via `bun build --compile`.
@@ -29,7 +29,7 @@ Port Bun (JavaScript runtime) to OpenBSD 7.8 amd64, ultimately to run OpenCode v
 | H | Rebuild Bun with code improvements | DONE — Zig cross-compile on Mac, relink on openbsd-host. Fixed io.zig kqueue routing + stat64 export wrappers. |
 | I | Fix OpenCode TUI CPU burn + black screen | **DONE** — CPU fixes (kevent timeout, JSC thread reduction) + TUI rendering fix (debug traces broke Solid.js lazy evaluation). |
 
-Note (February 21, 2026): this file contains both historical notes and current state snapshots from different sessions. Use `PORT-STATUS.md`, `OPENCODE-PORT-BUILD-GUIDE.md`, and `CONTRIBUTE.md` for current operational guidance, and `artifacts/openbsd-baseline-20260221-191735.md` for the latest automated verification run.
+Note (February 21, 2026): this file contains both historical notes and current state snapshots from different sessions. Use `RELEASE.md`, `OPENCODE-PORT-BUILD-GUIDE.md`, and `CONTRIBUTE.md` for current operational guidance, and `artifacts/openbsd-baseline-20260221-191735.md` for the latest automated verification run.
 
 Latest update (February 21, 2026):
 - OpenCode prompt Enter-submit root cause was traced and fixed in source mode (stale `store.prompt.input` vs live `input.plainText` at submit time).
@@ -971,7 +971,7 @@ opentui-0.1.79/     # opentui source (anomalyco/opentui, for building libopentui
   packages/core/src/zig/build.zig.zon  # Modified: minimum_zig_version 0.15.1
   packages/core/scripts/build.ts       # Modified: +openbsd variant, +openbsd platformMap
   packages/core/src/zig/lib/x86_64-openbsd/libopentui.so  # Built output (4.3MB)
-PLAN.md             # this file
+CHANGELOG.md             # this file
 ```
 
 ### openbsd-host (`/srv/opencode-port/`) — physical server 192.168.x.x (migrated from <OLD_OPENBSD_WORKSPACE> 2026-02-18)
@@ -1107,52 +1107,3 @@ V8Array_fixed.o         # Fixed V8 Array implementation (17MB)
 | `child_process.execSync/spawnSync` hang | Bun bug | LOW — race condition in recvNonBlock loop |
 | `bun install` missing symlinks | Bun bug | LOW — shell script workaround works |
 | Zombie worker processes | Cosmetic | LOW — worker threads not reaped on exit |
-
-## Consolidated Finish / Release Readiness Plan (formerly `FINISH-PLAN.md`)
-
-This section preserves the actionable parts of the former `FINISH-PLAN.md` so the separate file is no longer needed.
-
-### Phase 0: Re-establish execution path
-- Goal: regain remote execution loop and capture a baseline report.
-- Status: Completed on February 21, 2026 (`artifacts/openbsd-baseline-20260221-191735.md`).
-- Tasks:
-  1. Confirm OpenBSD host network reachability from the orchestration host.
-  2. Run the baseline script.
-  3. Store the generated report in `artifacts/` and use it as baseline truth.
-- Exit criteria: one successful baseline report with pass/fail per check.
-
-### Phase 1: Documentation normalization
-- Goal: make status and process unambiguous.
-- Status: Partially complete; core docs aligned, `PLAN.md` remains a historical log with mixed-era content.
-- Tasks:
-  1. Keep `PORT-STATUS.md` as the current-state summary.
-  2. Keep `PLAN.md` as history + deeper technical notes.
-  3. Keep `OPENCODE-PORT-BUILD-GUIDE.md` aligned with current commands and validations.
-- Exit criteria: no contradictory operational guidance in the active docs.
-
-### Phase 2: Reproducibility hardening
-- Goal: remove off-tree/manual patches and make rebuild deterministic.
-- Tasks:
-  1. Move any required runtime fix from cache or `node_modules` edits into source-controlled patches.
-  2. Ensure OpenTUI OpenBSD loading behavior is captured in source-controlled changes.
-  3. Script the build pipeline (cross-compile, strip, transfer, relink) with explicit inputs/outputs.
-- Exit criteria: fresh checkout + documented commands reproduce a working Bun/OpenCode build on OpenBSD without ad-hoc edits.
-
-### Phase 3: Runtime stabilization
-- Goal: close high-value remaining bugs.
-- Tasks:
-  1. Retain regression coverage for the Enter-submit TUI fix.
-  2. Fix or bound `execSync/spawnSync` intermittent hangs on OpenBSD.
-  3. Replace `bun install` workaround dependencies with a proper OpenBSD-compatible behavior.
-  4. Re-check idle CPU target using a repeatable measurement method.
-  5. Finalize visual acceptance for tmux/OpenBSD TUI rendering artifacts (mitigations are already implemented).
-- Exit criteria: remaining known bugs are low-impact and explicitly documented with rationale/mitigation.
-
-### Phase 4: Release readiness
-- Goal: finalize handoff quality and stable publication process.
-- Tasks:
-  1. Run full validation matrix (Bun smoke + OpenCode source mode + compiled mode).
-  2. Capture a dated release report.
-  3. Keep rebuild and verification commands exact and current.
-- Exit criteria: reproducible commands + passing baseline checks + documented stable state.
-

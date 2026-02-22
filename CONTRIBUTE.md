@@ -50,7 +50,7 @@ Promotion flow:
 
 ## Before You Commit
 
-1. Read `PORT-STATUS.md` to understand current risks and open issues.
+1. Read `RELEASE.md` to understand current status, risks, and release criteria.
 2. Follow `OPENCODE-PORT-BUILD-GUIDE.md` for build expectations.
 3. Run baseline validation:
    - `./scripts/test/run-openbsd-baseline.sh <your-openbsd-host>`
@@ -99,9 +99,9 @@ Keep the published repo focused on a small set of operational docs.
 
 Prefer:
 - build guide
-- status
+- release status/readiness summary
 - contribution workflow
-- main historical plan (when historical context matters)
+- changelog/engineering history (when historical context matters)
 
 Avoid publishing:
 - private planning scratch notes

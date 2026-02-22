@@ -1,4 +1,14 @@
-# OpenBSD Port Status (as of February 21, 2026)
+# Release Status and Readiness
+
+This file is the canonical public summary for:
+- current OpenBSD port status
+- verified evidence and risks
+- release readiness criteria
+- near-term release/finish plan
+
+Use this file for current-state and release decisions. Use `CHANGELOG.md` for detailed engineering history.
+
+## Current OpenBSD Port Status (as of February 21, 2026)
 
 ## Scope
 Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compile` for OpenCode.
@@ -7,10 +17,10 @@ Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compi
 - Bun OpenBSD compatibility patches are present across core runtime, event loop, syscalls, spawn, installer, and bindings.
 - OpenCode OpenBSD patches are present in source (`build.ts`, platform mapping, shell/clipboard/PTY/watcher handling, TUI fps change).
 - OpenTUI source includes OpenBSD target support and native-target build fallback updates.
-- `PLAN.md` documents successful source-mode and compiled-mode TUI rendering plus keyboard input after `isMac -> isBSD` fixes.
+- `CHANGELOG.md` documents successful source-mode and compiled-mode TUI rendering plus keyboard input after `isMac -> isBSD` fixes.
 
 ## Current reliability risks
-- `PLAN.md` contains conflicting statuses (top summary says complete, some sections still show in-progress checklists/workarounds).
+- `CHANGELOG.md` contains historical mixed-era status notes and should be treated as engineering history rather than the current release summary.
 - A critical OpenTUI import resolution fix is documented as a patch to installed/cache files, not cleanly captured as a source-controlled change.
 - Enter-submit fix has been applied and user-verified in both source and compiled tmux sessions.
 - Some runtime issues remain open and marked non-blocking:
@@ -54,4 +64,50 @@ Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compi
 1. Fully reproducible source-controlled build path (no manual cache/node_modules edits).
 2. Automated baseline checks pass on `openbsd-host` (Bun + OpenCode source + OpenCode compiled).
 3. Remaining OpenBSD runtime bugs either fixed or explicitly documented with acceptance/impact.
-4. Documentation reflects one canonical current state and one canonical finish plan.
+4. Documentation reflects a canonical release summary (`RELEASE.md`) and accurate operational guidance in the build/contribution docs.
+
+## Release Readiness Plan
+
+### Phase 0: Re-establish execution path
+- Goal: regain remote execution loop and capture a baseline report.
+- Status: Completed on February 21, 2026 (`artifacts/openbsd-baseline-20260221-191735.md`).
+- Tasks:
+  1. Confirm OpenBSD host network reachability from the orchestration host.
+  2. Run the baseline script.
+  3. Store the generated report in `artifacts/` and use it as baseline truth.
+- Exit criteria: one successful baseline report with pass/fail per check.
+
+### Phase 1: Documentation normalization
+- Goal: make status and process unambiguous.
+- Status: Partially complete; core docs aligned, `CHANGELOG.md` remains a historical log with mixed-era content.
+- Tasks:
+  1. Keep `RELEASE.md` as the current-state summary.
+  2. Keep `CHANGELOG.md` as history + deeper technical notes.
+  3. Keep `OPENCODE-PORT-BUILD-GUIDE.md` and `CONTRIBUTE.md` aligned with current commands and release workflow.
+- Exit criteria: no contradictory operational guidance in the active docs.
+
+### Phase 2: Reproducibility hardening
+- Goal: remove off-tree/manual patches and make rebuild deterministic.
+- Tasks:
+  1. Move any required runtime fix from cache or `node_modules` edits into source-controlled patches.
+  2. Ensure OpenTUI OpenBSD loading behavior is captured in source-controlled changes.
+  3. Script the build pipeline (cross-compile, strip, transfer, relink) with explicit inputs/outputs.
+- Exit criteria: fresh checkout + documented commands reproduce a working Bun/OpenCode build on OpenBSD without ad-hoc edits.
+
+### Phase 3: Runtime stabilization
+- Goal: close high-value remaining bugs.
+- Tasks:
+  1. Retain regression coverage for the Enter-submit TUI fix.
+  2. Fix or bound `execSync/spawnSync` intermittent hangs on OpenBSD.
+  3. Replace `bun install` workaround dependencies with a proper OpenBSD-compatible behavior.
+  4. Re-check idle CPU target using a repeatable measurement method.
+  5. Finalize visual acceptance for tmux/OpenBSD TUI rendering artifacts (mitigations are already implemented).
+- Exit criteria: remaining known bugs are low-impact and explicitly documented with rationale/mitigation.
+
+### Phase 4: Release readiness
+- Goal: finalize handoff quality and stable publication process.
+- Tasks:
+  1. Run full validation matrix (Bun smoke + OpenCode source mode + compiled mode).
+  2. Capture a dated release report.
+  3. Keep rebuild and verification commands exact and current.
+- Exit criteria: reproducible commands + passing baseline checks + documented stable state.

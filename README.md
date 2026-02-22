@@ -20,10 +20,9 @@ It is **not** an installable package repository and does **not** contain full so
 ## Start Here (Important Links)
 
 - **[Build Guide: `OPENCODE-PORT-BUILD-GUIDE.md`](OPENCODE-PORT-BUILD-GUIDE.md)**
-- **[Current Status: `PORT-STATUS.md`](PORT-STATUS.md)**
+- **[Release Status + Readiness: `RELEASE.md`](RELEASE.md)**
 - **[Contributing Guide: `CONTRIBUTE.md`](CONTRIBUTE.md)**
-- **[Main Engineering History + Consolidated Finish Plan: `PLAN.md`](PLAN.md)**
-- **[Placeholder Mapping (sanitized host/path names): `PLACEHOLDERS.md`](PLACEHOLDERS.md)**
+- **[Engineering History / Changelog: `CHANGELOG.md`](CHANGELOG.md)**
 - **[Enter-submit bug deep dive (historical fix record): `ENTER-SUBMIT-FIX-PLAN.md`](ENTER-SUBMIT-FIX-PLAN.md)**
 
 ## Related Repositories
@@ -54,19 +53,18 @@ Start here and follow the sequence below. The docs are intentionally ordered so 
 ## Canonical Reading Order
 
 1. `README.md` (this file)
-2. `PLACEHOLDERS.md`
-3. `PORT-STATUS.md`
-4. `OPENCODE-PORT-BUILD-GUIDE.md`
-5. `CONTRIBUTE.md`
-6. `PLAN.md` (history + deeper details)
+2. `RELEASE.md`
+3. `OPENCODE-PORT-BUILD-GUIDE.md` (includes placeholder conventions)
+4. `CONTRIBUTE.md`
+5. `CHANGELOG.md` (history + deeper details)
 
 ## Operator Sequence (Practical Order of Actions)
 
 ### 1. Clone and orient
 
 1. Clone all three repositories (`openbsd-opencode-port`, `bun-openbsd`, `opencode-openbsd`).
-2. Read `PLACEHOLDERS.md` and map placeholder names to your real host/path names.
-3. Read `PORT-STATUS.md` to confirm current reality before using older notes.
+2. Read the placeholder conventions section in `OPENCODE-PORT-BUILD-GUIDE.md` and map placeholder names to your real host/path names.
+3. Read `RELEASE.md` to confirm current reality before using older notes.
 
 ### 2. Prepare environment
 
@@ -131,7 +129,7 @@ Not included here:
 
 This repo keeps a small set of operational docs. Some older planning/reference material is intentionally **not** kept in the published repo.
 
-Example: the earlier publishing/ports planning draft is now treated as a local reference file, while `CONTRIBUTE.md` provides the public contributor workflow.
+Example: the earlier publishing/ports planning draft is kept as a local reference file, while `CONTRIBUTE.md` provides the public contributor workflow.
 
 ## OpenBSD Ports / `pkg_add` (Short Version)
 
