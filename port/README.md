@@ -79,10 +79,10 @@ pkg_add opencode
 opencode
 ```
 
-Near-term local testing (before an official repository/mirror package exists) will use a local package file, for example:
+Near-term local testing (before an official repository/mirror package exists) uses a local package file and an unsigned-package override, for example:
 
 ```sh
-pkg_add ./opencode-<version>.tgz
+doas pkg_add -D unsigned ./opencode-<pkg-version>.tgz
 opencode
 ```
 
@@ -102,7 +102,61 @@ User runtime data is not packaged into system directories; it remains in the use
 
 # Stage a package image tree under port/pkg-stage/image/ using /usr/local/... paths
 ./port/scripts/pkg-stage.sh --force
+
+# Build a real local OpenBSD package for pkg_add under port/pkg-stage/packages/
+./port/scripts/pkg-pack.sh --force
 ```
+
+### Local package test flow (exact maintainer flow)
+
+Tested on OpenBSD 7.8 with a locally built package file (example package name shown; your `<pkg-version>` may differ because `pkg_create` package versions are sanitized from the app `--version` string).
+
+```sh
+# On the build host (example: bstn)
+cd /srv/opencode-port/publish/repos/openbsd-opencode-port
+./port/scripts/pkg-stage.sh --force
+./port/scripts/pkg-pack.sh --force
+ls -lh port/pkg-stage/packages/*.tgz
+sha256 port/pkg-stage/packages/*.tgz
+```
+
+Copy the package to the test VM (use any method that preserves bytes, e.g. `scp` or SSH relay):
+
+```sh
+# Example destination on test VM
+/tmp/opencode-<pkg-version>.tgz
+```
+
+```sh
+# On the test VM (example: openbsd-vm)
+tmux kill-session -t opencode-pkg-visible 2>/dev/null || true
+pkill -f '/usr/local/bin/opencode|opencode-bin' 2>/dev/null || true
+
+doas pkg_delete opencode 2>/dev/null || true
+
+doas pkg_add -D unsigned /tmp/opencode-<pkg-version>.tgz
+opencode --version
+which opencode
+ls -l \
+  /usr/local/bin/opencode \
+  /usr/local/libexec/opencode/opencode-bin \
+  /usr/local/share/doc/opencode/README.txt \
+  /usr/local/share/doc/opencode/TROUBLESHOOTING.txt
+
+# Visible tmux TUI test
+TERM=xterm-256color tmux -u new-session -s opencode-pkg-visible 'opencode'
+# Detach with Ctrl-b d after confirming rendering
+
+# Uninstall / reinstall validation
+doas pkg_delete opencode
+doas pkg_add -D unsigned /tmp/opencode-<pkg-version>.tgz
+opencode --version
+```
+
+Notes:
+- `pkg_add` rejects unsigned local packages by default; use `-D unsigned` for this local test workflow.
+- `pkg_delete` uses the installed package name/stem (`opencode`).
+- The package file name may differ from the app version string because `pkg_create` enforces package-name formatting.
 
 ## Relationship to official OpenBSD ports
 
