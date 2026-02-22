@@ -52,6 +52,21 @@ tar -xzf opencode-openbsd-amd64-<version>.tgz -C ~/.local
 ~/.local/opencode-openbsd/bin/opencode
 ```
 
+## Packaging Commands (maintainer workflow)
+
+From the repo root:
+
+```sh
+./port/scripts/stage.sh --force
+./port/scripts/pack.sh --force
+./port/scripts/test.sh --tmux-smoke
+```
+
+Common overrides:
+- `./port/scripts/stage.sh --bin /path/to/opencode --force`
+- `./port/scripts/pack.sh --stage-dir /custom/stage --release-dir /custom/release --force`
+- `./port/scripts/test.sh --archive /path/to/opencode-openbsd-amd64-<version>.tgz --tmux-smoke`
+
 ## Relationship to official OpenBSD ports
 
 This `port/` workspace is for portable bundle packaging and local packaging experiments.
