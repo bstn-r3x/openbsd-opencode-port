@@ -54,6 +54,21 @@ zig3                     # Zig compiler (OpenBSD native, rarely used)
 - `/usr/obj/bun-build` → `<OLD_OPENBSD_WORKSPACE>/bun-build` (disk space)
 - `/usr/obj/jsc-build` → `<OLD_OPENBSD_WORKSPACE>/jsc-build`
 
+### Orchestration Repo Layout (public repo)
+
+The published `openbsd-opencode-port` repo is intentionally small and focused.
+
+Core directories:
+- `scripts/build/` — build helpers and wrappers
+- `scripts/test/` — automated baseline and visible TUI launchers
+- `scripts/tools/` — maintenance utilities used by the build workflow
+
+Local-only directories that may exist in a private working workspace (not required in the published repo):
+- `backups/<timestamp>/` — structured snapshots
+- `archives/` — retained local reference artifacts/tarballs
+
+Note: older private workspaces also used root-level compatibility symlinks (for example `run-openbsd-baseline.sh`). In the published repo, prefer calling scripts via their canonical paths under `scripts/`.
+
 ## Build Pipeline
 
 The full build has 5 stages. For incremental rebuilds after Zig source changes, only stages 1-4 are needed.
@@ -198,6 +213,50 @@ ssh -t openbsd-host "cd /srv/opencode-port/opencode/packages/opencode && /srv/op
 ssh openbsd-host "top -b -d1 | head -20"
 # Target: < 15% CPU for bun process
 ```
+
+### Stage 5A: Interactive validation (manual, visible)
+
+Use tmux for source-mode and compiled-mode TUI validation so rendering and keyboard behavior are visible.
+
+Recommended launcher (from this orchestration repo):
+
+```bash
+./scripts/test/run-visible-tui-tests.sh <your-openbsd-host>
+```
+
+This starts two tmux windows on the OpenBSD host:
+- source mode TUI
+- compiled binary TUI
+
+Attach to the tmux session:
+
+```bash
+ssh <your-openbsd-host> 'tmux attach -t 8'
+```
+
+Direct launch commands used for interactive validation (appendix material):
+
+Source mode:
+```sh
+ssh -t openbsd-host 'cd /srv/opencode-port/opencode/packages/opencode && /srv/opencode-port/bun run --conditions=browser src/index.ts'
+```
+
+Compiled mode:
+```sh
+ssh -t openbsd-host 'cd /srv/opencode-port/opencode/packages/opencode && /srv/opencode-port/opencode-bin'
+```
+
+### Stage 5B: Test evidence and release gate notes
+
+When validating a new build or preparing a stable promotion:
+
+1. Capture command outputs and exit codes for failed checks.
+2. Save the generated baseline report under `artifacts/`.
+3. Update `PORT-STATUS.md` and this build guide when behavior or commands change.
+4. Treat a state as release-ready only when:
+   - baseline automation passes,
+   - interactive source and compiled TUI checks pass,
+   - remaining bugs are explicitly documented with rationale/mitigation.
 
 ## Known Workarounds
 
