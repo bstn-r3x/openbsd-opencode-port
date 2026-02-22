@@ -1,0 +1,37 @@
+# Local/editor
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+.claude/
+
+# Generated runtime/build outputs
+artifacts/*.log
+artifacts/*.tmp
+artifacts/*.out
+artifacts/screenshots/
+backups/
+archive/
+archives/source-tarballs/
+
+# Source/build trees that belong in separate repos or local workspaces
+bun-source/
+opencode-src/
+oven-zig/
+opentui-0.1.79/
+zig-mac/
+
+# Build outputs and caches
+node_modules/
+dist/
+build/
+.zig-cache/
+tmp/
+logs/
+.opencode/
+ktrace.out
+
+# Local test reports (keep only curated markdown reports if desired)
+artifacts/*.json
+artifacts/*.sqlite
