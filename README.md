@@ -45,7 +45,7 @@ This project is **not yet** a normal end-user install path.
 - A portable `.tgz` bundle workflow is being prepared in [`port/README.md`](port/README.md) for pre-`pkg_add` distribution
 - There is no official OpenBSD package in ports yet
 - `pkg_add` does not work from official OpenBSD mirrors because the port is not accepted upstream
-- Maintainer-only local package tests via `pkg_add -D unsigned ./opencode-<pkg-version>.tgz` are documented in [`port/README.md`](port/README.md)
+- Maintainer-only local package tests via `pkg_add -D unsigned ./opencode-<pkg-version>.tgz` are documented in [`port/README.md`](port/README.md), including sterile tmux test commands that avoid reusing host auth state
 - Current usage is a porter/developer workflow (source + build/test)
 
 ### Porters / maintainers

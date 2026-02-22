@@ -69,6 +69,18 @@ Common overrides:
 - `./port/scripts/stage.sh --bin /path/to/opencode --force`
 - `./port/scripts/pack.sh --stage-dir /custom/stage --release-dir /custom/release --force`
 - `./port/scripts/test.sh --archive /path/to/opencode-openbsd-amd64-<version>.tgz --tmux-smoke`
+- `./port/scripts/test.sh --archive /path/to/opencode-openbsd-amd64-<version>.tgz --tmux-smoke --allow-host-state` (only if you intentionally want host auth/session state)
+
+## Security Note: Host Auth State During TUI Tests
+
+OpenCode may automatically use host-local auth/session state from standard XDG paths, including files under:
+- `~/.local/share/opencode/` (notably `auth.json`)
+- `~/.local/state/opencode/`
+- `~/.cache/opencode/`
+
+This is runtime behavior on the host and is **not** caused by the package payload itself.
+
+For reproducible and safe tmux validation (especially on shared/test hosts), run OpenCode with isolated `HOME/XDG_*` state using `./port/scripts/run-sterile.sh` (build host) or an equivalent `env -i` wrapper (test VM).
 
 ## Local Package (pkg_add) Goal and Standard Install Paths
 
@@ -120,6 +132,15 @@ ls -lh port/pkg-stage/packages/*.tgz
 sha256 port/pkg-stage/packages/*.tgz
 ```
 
+Optional visible compiled-binary tmux check on the build host (sterile, recommended):
+
+```sh
+# Leaves host ~/.local/share/opencode/auth.json and other XDG state unused
+TERM=xterm-256color tmux -u new-session -s opencode-build-visible \
+  'cd /srv/opencode-port/publish/repos/openbsd-opencode-port && ./port/scripts/run-sterile.sh -- /srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode'
+# Detach with Ctrl-b d after confirming rendering/input
+```
+
 Copy the package to the test VM (use any method that preserves bytes, e.g. `scp` or SSH relay):
 
 ```sh
@@ -143,9 +164,10 @@ ls -l \
   /usr/local/share/doc/opencode/README.txt \
   /usr/local/share/doc/opencode/TROUBLESHOOTING.txt
 
-# Visible tmux TUI test
-TERM=xterm-256color tmux -u new-session -s opencode-pkg-visible 'opencode'
-# Detach with Ctrl-b d after confirming rendering
+# Visible tmux TUI test (sterile HOME/XDG state so host auth/session data is not reused)
+TERM=xterm-256color tmux -u new-session -s opencode-pkg-visible \
+  'ST=/tmp/opencode-sterile; rm -rf "$ST"; mkdir -p "$ST/home" "$ST/xdg-config" "$ST/xdg-data" "$ST/xdg-state" "$ST/xdg-cache"; env -i HOME="$ST/home" XDG_CONFIG_HOME="$ST/xdg-config" XDG_DATA_HOME="$ST/xdg-data" XDG_STATE_HOME="$ST/xdg-state" XDG_CACHE_HOME="$ST/xdg-cache" PATH=/bin:/usr/bin:/usr/local/bin TERM=xterm-256color /usr/local/bin/opencode'
+# Detach with Ctrl-b d after confirming rendering/input
 
 # Uninstall / reinstall validation
 doas pkg_delete opencode
@@ -157,6 +179,7 @@ Notes:
 - `pkg_add` rejects unsigned local packages by default; use `-D unsigned` for this local test workflow.
 - `pkg_delete` uses the installed package name/stem (`opencode`).
 - The package file name may differ from the app version string because `pkg_create` enforces package-name formatting.
+- If you intentionally want to test your logged-in provider account/session behavior, do not use the sterile wrappers.
 
 ## Relationship to official OpenBSD ports
 

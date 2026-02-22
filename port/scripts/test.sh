@@ -8,13 +8,14 @@ Usage: port/scripts/test.sh [options]
 Smoke-test a portable bundle archive as an extracted user install.
 
 Options:
-  --archive PATH      Archive to test (default: latest .tgz in <repo>/port/release)
-  --release-dir PATH  Directory to search for archives (default: <repo>/port/release)
-  --work-dir PATH     Extraction temp dir (default: mktemp under /tmp)
-  --tmux-smoke        Launch bundled opencode in detached tmux and verify liveness
-  --tmux-session NAME tmux session name for --tmux-smoke (default: opencode-port-bundle-test)
-  --keep              Keep extracted work dir (and tmux session if started)
-  -h, --help          Show this help
+  --archive PATH        Archive to test (default: latest .tgz in <repo>/port/release)
+  --release-dir PATH    Directory to search for archives (default: <repo>/port/release)
+  --work-dir PATH       Extraction temp dir (default: mktemp under /tmp)
+  --tmux-smoke          Launch bundled opencode in detached tmux and verify liveness
+  --tmux-session NAME   tmux session name for --tmux-smoke (default: opencode-port-bundle-test)
+  --allow-host-state    For --tmux-smoke, use current HOME/XDG state (default: isolated state)
+  --keep                Keep extracted work dir (and tmux session if started)
+  -h, --help            Show this help
 USAGE
 }
 
@@ -31,7 +32,9 @@ RELEASE_DIR="$PORT_DIR/release"
 WORK_DIR=""
 TMUX_SMOKE=0
 TMUX_SESSION="opencode-port-bundle-test"
+ALLOW_HOST_STATE=0
 KEEP=0
+TMUX_STATE_ROOT=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -58,6 +61,10 @@ while [ $# -gt 0 ]; do
       [ $# -ge 2 ] || die "missing value for --tmux-session"
       TMUX_SESSION=$2
       shift 2
+      ;;
+    --allow-host-state)
+      ALLOW_HOST_STATE=1
+      shift
       ;;
     --keep)
       KEEP=1
@@ -89,6 +96,9 @@ cleanup() {
   if [ "$TMUX_SMOKE" -eq 1 ] && [ "$KEEP" -ne 1 ]; then
     tmux kill-session -t "$TMUX_SESSION" 2>/dev/null || true
   fi
+  if [ -n "$TMUX_STATE_ROOT" ] && [ "$KEEP" -ne 1 ]; then
+    rm -rf -- "$TMUX_STATE_ROOT"
+  fi
   if [ "$KEEP" -ne 1 ]; then
     rm -rf -- "$WORK_DIR"
   fi
@@ -118,7 +128,17 @@ echo "Version:      $VERSION"
 
 if [ "$TMUX_SMOKE" -eq 1 ]; then
   tmux kill-session -t "$TMUX_SESSION" 2>/dev/null || true
-  tmux new-session -d -s "$TMUX_SESSION" "cd \"$BUNDLE_DIR\" && ./bin/opencode"
+
+  if [ "$ALLOW_HOST_STATE" -eq 1 ]; then
+    TMUX_CMD="cd \"$BUNDLE_DIR\" && ./bin/opencode"
+    echo "Tmux smoke env: HOST state (non-sterile)"
+  else
+    TMUX_STATE_ROOT=$(mktemp -d /tmp/opencode-port-tmux-smoke.XXXXXX)
+    TMUX_CMD="cd \"$BUNDLE_DIR\" && \"$SCRIPT_DIR/run-sterile.sh\" --quiet --state-root \"$TMUX_STATE_ROOT\" -- ./bin/opencode"
+    echo "Tmux smoke env: STERILE state ($TMUX_STATE_ROOT)"
+  fi
+
+  tmux new-session -d -s "$TMUX_SESSION" "$TMUX_CMD"
   sleep 3
   tmux has-session -t "$TMUX_SESSION" 2>/dev/null || die "tmux session did not stay alive"
   PANE_INFO=$(tmux list-panes -t "$TMUX_SESSION" -F '#{session_name}:#{window_index}.#{pane_index} pid=#{pane_pid} cmd=#{pane_current_command} alt=#{alternate_on} dead=#{pane_dead}' | head -1)
@@ -128,4 +148,7 @@ fi
 
 if [ "$KEEP" -eq 1 ]; then
   echo "Kept work dir: $WORK_DIR"
+  if [ -n "$TMUX_STATE_ROOT" ]; then
+    echo "Kept tmux smoke state dir: $TMUX_STATE_ROOT"
+  fi
 fi
