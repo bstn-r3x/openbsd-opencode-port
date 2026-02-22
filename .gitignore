@@ -25,7 +25,7 @@ zig-mac/
 # Build outputs and caches
 node_modules/
 dist/
-build/
+/build/
 .zig-cache/
 tmp/
 logs/
