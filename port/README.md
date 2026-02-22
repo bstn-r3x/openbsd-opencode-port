@@ -57,6 +57,9 @@ tar -xzf opencode-openbsd-amd64-<version>.tgz -C ~/.local
 From the repo root:
 
 ```sh
+./port/scripts/release-local.sh --force --tmux-smoke
+
+# Equivalent explicit steps:
 ./port/scripts/stage.sh --force
 ./port/scripts/pack.sh --force
 ./port/scripts/test.sh --tmux-smoke

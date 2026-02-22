@@ -12,3 +12,5 @@ Scripts:
 - `stage.sh` — stage wrapper, binary, and bundle docs into `port/stage/opencode-openbsd/`
 - `pack.sh` — create `opencode-openbsd-amd64-<version>.tgz` + checksum
 - `test.sh` — extract bundle and run `bin/opencode --version` (optional tmux liveness smoke)
+
+- `release-local.sh` — convenience wrapper that runs stage -> pack -> test
