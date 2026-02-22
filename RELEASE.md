@@ -21,7 +21,7 @@ Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compi
 
 ## Current reliability risks
 - `CHANGELOG.md` contains historical mixed-era status notes and should be treated as engineering history rather than the current release summary.
-- A critical OpenTUI import resolution fix is documented as a patch to installed/cache files, not cleanly captured as a source-controlled change.
+- OpenTUI import portability fix is now captured as a source-controlled OpenCode build patch (`packages/opencode/script/build.ts`) that rewrites the installed `@opentui/core` loader with an OpenBSD relative fallback; local rebuild + relocated binary smoke validation completed on `openbsd-host`, cross-machine validation still pending.
 - Enter-submit fix has been applied and user-verified in both source and compiled tmux sessions.
 - Some runtime issues remain open and marked non-blocking:
   - `child_process.execSync/spawnSync` intermittent hang.
@@ -88,6 +88,7 @@ Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compi
 
 ### Phase 2: Reproducibility hardening
 - Goal: remove off-tree/manual patches and make rebuild deterministic.
+- Update (February 22, 2026): OpenTUI loader portability fallback has been moved into a source-controlled OpenCode build patch and validated on `openbsd-host` (local rebuild + relocated compiled binary launch). Fresh-machine validation is the next step.
 - Tasks:
   1. Move any required runtime fix from cache or `node_modules` edits into source-controlled patches.
   2. Ensure OpenTUI OpenBSD loading behavior is captured in source-controlled changes.

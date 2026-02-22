@@ -256,6 +256,17 @@ Compiled mode:
 ssh -t openbsd-host 'cd /srv/opencode-port/opencode/packages/opencode && /srv/opencode-port/opencode-bin'
 ```
 
+### OpenTUI loader portability fix (OpenBSD)
+
+OpenCode builds install `@opentui/core`, whose generated loader imports the platform package using a dynamic package specifier (for example `@opentui/core-openbsd-x64/index.ts`). In compiled/relocated runs on OpenBSD, this package-specifier import can fail depending on runtime layout.
+
+The OpenBSD port patches this in source control at `packages/opencode/script/build.ts` by rewriting the installed `@opentui/core` loader after dependency install (and also during `--skip-install` rebuilds). The patched loader behavior is:
+
+1. Try the original package import first.
+2. On OpenBSD only, fall back to a relative sibling path import (`../core-openbsd-x64/index.ts`) using `import.meta.url`.
+
+This avoids machine-specific absolute path edits in `node_modules` (for example `/srv/opencode-port/...`) and makes compiled builds relocatable enough for bundle/package work.
+
 ### Stage 5B: Test evidence and release gate notes
 
 When validating a new build or preparing a stable promotion:

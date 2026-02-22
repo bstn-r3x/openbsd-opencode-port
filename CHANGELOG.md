@@ -31,6 +31,13 @@ Port Bun (JavaScript runtime) to OpenBSD 7.8 amd64, ultimately to run OpenCode v
 
 Note (February 21, 2026): this file contains both historical notes and current state snapshots from different sessions. Use `RELEASE.md`, `OPENCODE-PORT-BUILD-GUIDE.md`, and `CONTRIBUTE.md` for current operational guidance, and `artifacts/openbsd-baseline-20260221-191735.md` for the latest automated verification run.
 
+Latest update (February 22, 2026):
+- OpenTUI native loader portability fix moved into source-controlled OpenCode build pipeline (`packages/opencode/script/build.ts`).
+  - Build script now rewrites installed `@opentui/core` loader to keep package import first and add an OpenBSD-only relative fallback (`../core-openbsd-x64/index.ts`) when package-specifier import fails.
+  - Patch is idempotent (marker-based) and runs even with `--skip-install`, so incremental rebuilds also receive the portability fix.
+  - Local validation on openbsd-host: rebuilt successfully (`--single --skip-install`), patched loader verified, and relocated compiled binary launched from `/tmp` without `/srv/opencode-port/...` OpenTUI path dependency.
+- Cross-machine validation from published repos remains pending (planned on a second OpenBSD 7.8 host).
+
 Latest update (February 21, 2026):
 - OpenCode prompt Enter-submit root cause was traced and fixed in source mode (stale `store.prompt.input` vs live `input.plainText` at submit time).
   - Investigation confirmed Enter arrives as CR (`0x0d`, `\r`) and is parsed as `name="return"`, `sequence="\r"`.
