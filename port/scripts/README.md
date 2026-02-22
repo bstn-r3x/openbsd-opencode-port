@@ -14,3 +14,6 @@ Scripts:
 - `test.sh` — extract bundle and run `bin/opencode --version` (optional tmux liveness smoke)
 
 - `release-local.sh` — convenience wrapper that runs stage -> pack -> test
+
+- `pkg-inventory.sh` — collect runtime dependency/portability inventory for the compiled binary
+- `pkg-stage.sh` — stage a local package image using standard /usr/local OpenBSD install paths

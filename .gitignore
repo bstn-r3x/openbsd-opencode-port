@@ -41,3 +41,9 @@ port/stage/*
 !port/stage/.gitignore
 port/release/*
 !port/release/.gitignore
+
+# Local package-image and inventory outputs
+port/pkg-stage/*
+!port/pkg-stage/.gitignore
+port/pkg-report/*
+!port/pkg-report/.gitignore

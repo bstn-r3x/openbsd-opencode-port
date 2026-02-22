@@ -70,6 +70,40 @@ Common overrides:
 - `./port/scripts/pack.sh --stage-dir /custom/stage --release-dir /custom/release --force`
 - `./port/scripts/test.sh --archive /path/to/opencode-openbsd-amd64-<version>.tgz --tmux-smoke`
 
+## Local Package (pkg_add) Goal and Standard Install Paths
+
+Target user experience (eventual):
+
+```sh
+pkg_add opencode
+opencode
+```
+
+Near-term local testing (before an official repository/mirror package exists) will use a local package file, for example:
+
+```sh
+pkg_add ./opencode-<version>.tgz
+opencode
+```
+
+Standard OpenBSD install paths planned for the local package image:
+- `/usr/local/bin/opencode` (wrapper command users run)
+- `/usr/local/libexec/opencode/opencode-bin` (compiled binary)
+- `/usr/local/share/doc/opencode/README.txt`
+- `/usr/local/share/doc/opencode/TROUBLESHOOTING.txt`
+
+User runtime data is not packaged into system directories; it remains in the user's home directory (for example `~/.opencode/`).
+
+### Local package groundwork commands (maintainer)
+
+```sh
+# Inspect runtime dependencies / portability signals
+./port/scripts/pkg-inventory.sh
+
+# Stage a package image tree under port/pkg-stage/image/ using /usr/local/... paths
+./port/scripts/pkg-stage.sh --force
+```
+
 ## Relationship to official OpenBSD ports
 
 This `port/` workspace is for portable bundle packaging and local packaging experiments.
