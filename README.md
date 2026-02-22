@@ -23,7 +23,6 @@ It is **not** an installable package repository and does **not** contain full so
 - **[Release Status + Readiness: `RELEASE.md`](RELEASE.md)**
 - **[Contributing Guide: `CONTRIBUTE.md`](CONTRIBUTE.md)**
 - **[Engineering History / Changelog: `CHANGELOG.md`](CHANGELOG.md)**
-- **[Enter-submit bug deep dive (historical fix record): `ENTER-SUBMIT-FIX-PLAN.md`](ENTER-SUBMIT-FIX-PLAN.md)**
 
 ## Related Repositories
 

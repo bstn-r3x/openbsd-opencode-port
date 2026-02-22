@@ -33,6 +33,9 @@ Note (February 21, 2026): this file contains both historical notes and current s
 
 Latest update (February 21, 2026):
 - OpenCode prompt Enter-submit root cause was traced and fixed in source mode (stale `store.prompt.input` vs live `input.plainText` at submit time).
+  - Investigation confirmed Enter arrives as CR (`0x0d`, `\r`) and is parsed as `name="return"`, `sequence="\r"`.
+  - Failure point was stale prompt store state while the live textarea already contained text.
+  - Fix was validated in visible tmux sessions in both source mode and compiled mode (prompt submit + response path observed).
 - Source-mode tmux Enter submission has user confirmation.
 - Compiled-mode tmux Enter submission also has user confirmation (input submit + model reply observed).
 - Regression test coverage hardening is still pending in the remote build tree.
