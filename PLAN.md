@@ -6,7 +6,6 @@ Port Bun (JavaScript runtime) to OpenBSD 7.8 amd64, ultimately to run OpenCode v
 ## Environment
 - **Mac host**: runs Claude Code, workspace at `<MAC_WORKSPACE>/opencode-port`
 - **OpenBSD 7.8 physical server (openbsd-host)**: `ssh openbsd-host` (192.168.x.x), Lenovo ThinkPad, Intel i5-8350U (8 cores), 16.4GB RAM, OpenBSD 7.8 amd64, Clang 19.1.7, CMake 3.31.8, ICU 77.1, Rust
-  - **Replaced**: old VM `old-openbsd-vm` (192.168.x.x, 2 CPUs, 16GB /home at 101% full) — migrated to openbsd-host for disk space + CPU
 - **NFS**: Mac `<MAC_WORKSPACE>/opencode-port` → OpenBSD `/mnt/mac-shared` (mount with `-o tcp,rw,soft,intr,noatime`)
   - Mac IP: 192.168.x.x (Ethernet interface reachable from the OpenBSD host)
   - Note: Mac also has 192.168.x.x on WiFi interface (not used for this workflow)
