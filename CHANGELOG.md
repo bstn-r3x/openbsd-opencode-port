@@ -1,4 +1,5 @@
-# OpenCode on OpenBSD Porting Changelog and Engineering History
+# OpenCode on OpenBSD 
+# Porting Changelog and Engineering History
 
 ## Goal
 Port Bun (JavaScript runtime) to OpenBSD 7.8 amd64, ultimately to run OpenCode v1.1.65 via `bun build --compile`.
