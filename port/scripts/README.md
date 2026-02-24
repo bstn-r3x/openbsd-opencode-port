@@ -22,5 +22,5 @@ Scripts:
 - `release-local.sh` — convenience wrapper that runs stage -> pack -> test
 - `pkg-inventory.sh` — collect runtime dependency/portability inventory for the compiled binary (supports gating via `--forbid-pattern` and `--fail-on-private-path`)
 - `pkg-stage.sh` — stage a local package image using standard /usr/local OpenBSD install paths
-- `pkg-pack.sh` — build a real local OpenBSD package (`.tgz`) from the staged package image
+- `pkg-pack.sh` — build a real local OpenBSD package (`.tgz`) from the staged package image (optional `--inventory-check` / `--inventory-gate` preflight)
 - `run-sterile.sh` — run OpenCode (or any command) with isolated HOME/XDG state so local auth/session data is not used

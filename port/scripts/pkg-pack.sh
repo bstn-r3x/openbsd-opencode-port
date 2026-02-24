@@ -18,6 +18,11 @@ Options:
   --comment TEXT      Package COMMENT field (default: OpenCode local package for OpenBSD)
   --fullpkgpath PATH  Package FULLPKGPATH metadata (default: misc/opencode)
   --desc PATH         Use description text from file instead of generated text
+  --inventory-check   Run pkg-inventory.sh on the staged binary before pkg_create (report only)
+  --inventory-gate    Run pkg-inventory.sh --fail-on-private-path before pkg_create (fails on leak)
+  --inventory-output PATH
+                      Output path for inventory report when using --inventory-check/--inventory-gate
+                      (default: pkg-inventory.sh default report path)
   --force             Overwrite existing package/checksum and reset work dir
   -h, --help          Show this help
 USAGE
@@ -41,6 +46,8 @@ VERSION=""
 COMMENT="OpenCode local package for OpenBSD"
 FULLPKGPATH="misc/opencode"
 DESC_PATH=""
+INVENTORY_MODE=""
+INVENTORY_OUTPUT=""
 FORCE=0
 
 while [ $# -gt 0 ]; do
@@ -95,6 +102,19 @@ while [ $# -gt 0 ]; do
       DESC_PATH=$2
       shift 2
       ;;
+    --inventory-check)
+      INVENTORY_MODE=check
+      shift
+      ;;
+    --inventory-gate)
+      INVENTORY_MODE=gate
+      shift
+      ;;
+    --inventory-output)
+      [ $# -ge 2 ] || die "missing value for --inventory-output"
+      INVENTORY_OUTPUT=$2
+      shift 2
+      ;;
     --force)
       FORCE=1
       shift
@@ -125,6 +145,25 @@ DOC_TROUBLE="$IMAGE_ROOT/$PREFIX_REL/share/doc/$DOC_NAME/TROUBLESHOOTING.txt"
 [ -x "$BIN_PATH" ] || die "staged binary not found: $BIN_PATH"
 [ -f "$DOC_README" ] || die "staged doc not found: $DOC_README"
 [ -f "$DOC_TROUBLE" ] || die "staged doc not found: $DOC_TROUBLE"
+
+if [ -n "$INVENTORY_MODE" ]; then
+  INVENTORY_SCRIPT="$SCRIPT_DIR/pkg-inventory.sh"
+  [ -x "$INVENTORY_SCRIPT" ] || die "inventory script not executable: $INVENTORY_SCRIPT"
+  echo "Running inventory preflight ($INVENTORY_MODE) on staged binary..."
+  if [ "$INVENTORY_MODE" = "gate" ]; then
+    if [ -n "$INVENTORY_OUTPUT" ]; then
+      "$INVENTORY_SCRIPT" --bin "$BIN_PATH" --output "$INVENTORY_OUTPUT" --fail-on-private-path
+    else
+      "$INVENTORY_SCRIPT" --bin "$BIN_PATH" --fail-on-private-path
+    fi
+  else
+    if [ -n "$INVENTORY_OUTPUT" ]; then
+      "$INVENTORY_SCRIPT" --bin "$BIN_PATH" --output "$INVENTORY_OUTPUT"
+    else
+      "$INVENTORY_SCRIPT" --bin "$BIN_PATH"
+    fi
+  fi
+fi
 
 if [ -z "$VERSION" ]; then
   VERSION=$($BIN_PATH --version 2>/dev/null | head -1 | tr -d '\r')

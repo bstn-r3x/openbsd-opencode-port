@@ -125,6 +125,8 @@ User runtime data is not packaged into system directories; it remains in the use
 
 # Build a real local OpenBSD package for pkg_add under port/pkg-stage/packages/
 ./port/scripts/pkg-pack.sh --force
+# Optional strict pre-package gate (currently expected to fail until private build paths are removed from the binary payload)
+./port/scripts/pkg-pack.sh --inventory-gate --force
 ```
 
 ### Local package test flow (exact maintainer flow)
@@ -135,6 +137,8 @@ Tested on OpenBSD 7.8 with a locally built package file (example package name sh
 # On the build host (example: bstn)
 cd /srv/opencode-port/publish/repos/openbsd-opencode-port
 ./port/scripts/pkg-stage.sh --force
+# Optional strict preflight gate (fails if private workspace paths are embedded in the staged binary)
+./port/scripts/pkg-pack.sh --inventory-gate --force
 ./port/scripts/pkg-pack.sh --force
 ls -lh port/pkg-stage/packages/*.tgz
 sha256 port/pkg-stage/packages/*.tgz
@@ -184,6 +188,7 @@ opencode --version
 ```
 
 Notes:
+- Do not use `strip` as a quick path-leak workaround on the Bun-packaged OpenCode binary; it removes the appended app payload and `opencode --version` falls back to the Bun runtime version.
 - `pkg_add` rejects unsigned local packages by default; use `-D unsigned` for this local test workflow.
 - `pkg_delete` uses the installed package name/stem (`opencode`).
 - The package file name may differ from the app version string because `pkg_create` enforces package-name formatting.
