@@ -950,7 +950,6 @@ Files modified in `<MAC_WORKSPACE>/opencode-port/opentui-0.1.79/packages/core/`:
 - **No numeric f_type in OpenBSD statfs**: Return 0, OpenBSD has f_fstypename (string) instead
 - **Build runner whitespace issue**: `zig build obj` sometimes fails with "no step named ''". Workaround: invoke the build runner binary directly. Also do NOT use `-Z0000000000000000` flag.
 - **LLD 19 large .o bug**: LLD 19.1.7 on OpenBSD misreads e_shoff from 254MB .o files. GNU readelf and raw hex verify the file is correct. LLVM readelf reports wrong offset (560 bytes too high). GNU objcopy can strip debug sections but corrupts relocation types it doesn't know (type 42 = R_X86_64_REX_GOTPCRELX). Need a modern strip tool or to build without debug info.
-- **Disk space management**: Old VM /home (16G) was full. Migrated to <openbsd-host> with 97GB free.
 - **libuv required for NAPI**: Bun only officially links libuv on Windows, but the NAPI/V8 compatibility layer (`napi.zig`) references `uv_*` symbols on all platforms. Must build libuv from source on OpenBSD and link it.
 - **Duplicate `uv_tty_reset_mode`**: Both `wtf-bindings.cpp` and libuv define this. Use `--allow-multiple-definition`.
 - **Inspector agent stubs conflict with Zig**: When `ENABLE_REMOTE_INSPECTOR=0`, the `#else` branches compile stub `extern "C"` functions that duplicate symbols Zig provides. Must remove the 6 stubs (Enable/Disable/setEnabled) from C++ side.
@@ -1017,8 +1016,6 @@ v8_array_bridge.o       # Assembly trampoline for v8::Array::New symbol mismatch
 V8Array_fixed.o         # Fixed V8 Array implementation (17MB)
 /tmp/v8_array_bridge.S  # Assembly source for trampoline
 ```
-
-### Disk Usage (<openbsd-host> /home: 65.6GB free of 96.9GB)
 
 ## Code Review Findings (2026-02-17)
 
