@@ -1,5 +1,5 @@
 @comment $OpenBSD$
-bin/opencode
-libexec/opencode/opencode-bin
+@bin bin/opencode
+@bin libexec/opencode/opencode-bin
 share/doc/opencode/README.txt
 share/doc/opencode/TROUBLESHOOTING.txt

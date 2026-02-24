@@ -1,5 +1,5 @@
 OpenCode is a terminal coding assistant with a TUI interface.
 
-This ports skeleton tracks the OpenBSD packaging metadata and intended install
-layout while the full ports framework build/install integration is being
-implemented.
+This OpenBSD port is currently in a local-bootstrap stage: it installs a locally
+built OpenCode binary through the ports framework so install layout, package
+metadata, and pkg_add/pkg_delete behavior can be validated in a real ports tree.

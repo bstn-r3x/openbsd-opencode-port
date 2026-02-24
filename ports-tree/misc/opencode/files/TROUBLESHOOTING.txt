@@ -1,0 +1,5 @@
+If the TUI appears mostly black or low-contrast in tmux:
+- Use xterm-256color in the terminal emulator
+- Set tmux default-terminal to tmux-256color
+- Enable tmux truecolor overrides (Tc / RGB)
+- Reattach tmux after changing terminal settings
