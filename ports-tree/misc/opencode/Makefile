@@ -12,6 +12,21 @@ CATEGORIES =	misc
 
 HOMEPAGE =	https://github.com/bstn-r3x/opencode-openbsd
 
+# Target direction (Option 1 selected): source-distfile-based port build.
+#
+# Planned shape (not implemented yet):
+# - fetch OpenCode source distfile(s) + verify via distinfo
+# - build inside the ports framework using Bun on OpenBSD
+# - install wrapper + libexec binary + docs via do-install
+#
+# Current blockers for the source-distfile path:
+# - no `lang/bun` port in the base OpenBSD ports tree (build dependency gap)
+# - no ports module/integration for Bun workspace dependency resolution
+# - naive vendoring is too large (measured on bstn: monorepo node_modules ~3.8G)
+#
+# This port stays in a local-bootstrap mode for now to validate install layout and
+# package behavior through bsd.port.mk while the source-distfile strategy is refined.
+
 # TODO: set maintainer before submission
 MAINTAINER =	bstn@example.invalid
 
