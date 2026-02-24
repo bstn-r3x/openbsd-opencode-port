@@ -27,6 +27,7 @@ die() {
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PORT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+REPO_ROOT=$(CDPATH= cd -- "$PORT_DIR/.." && pwd)
 
 BIN_PATH="/srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"
 IMAGE_ROOT="$PORT_DIR/pkg-stage/image"
@@ -102,6 +103,10 @@ META_DIR="$IMAGE_ROOT/.pkg-meta"
 
 mkdir -p "$(dirname -- "$BIN_DST")" "$LIBEXEC_DIR" "$DOC_DIR" "$META_DIR"
 
+if [ -f "$REPO_ROOT/LICENSE" ]; then
+  cp -p "$REPO_ROOT/LICENSE" "$DOC_DIR/LICENSE.txt"
+fi
+
 cat > "$BIN_DST" <<EOF_WRAP
 #!/bin/sh
 set -eu
@@ -133,6 +138,20 @@ If the TUI appears mostly black or low-contrast in tmux:
 - Reattach tmux after changing terminal settings
 EOF_TROUBLE
 
+cat > "$DOC_DIR/THIRD-PARTY-NOTICES.txt" <<'EOF_NOTICE'
+Third-party notices (summary)
+
+This local package installs an OpenCode binary built from the OpenBSD porting forks.
+License texts and notices may apply to OpenCode, Bun, OpenTUI, and their dependencies.
+
+Repository-level license files:
+- openbsd-opencode-port (this repo): LICENSE (MIT)
+- opencode-openbsd: LICENSE (MIT)
+- bun-openbsd: LICENSE.md (includes Bun + JavaScriptCore/WebKit notice details)
+
+For full source and license context, see the published project repositories.
+EOF_NOTICE
+
 cat > "$META_DIR/INSTALL-LAYOUT.txt" <<EOF_META
 prefix=$PREFIX
 version=$VERSION
@@ -150,6 +169,8 @@ bin/opencode
 libexec/opencode/opencode-bin
 share/doc/$DOC_NAME/README.txt
 share/doc/$DOC_NAME/TROUBLESHOOTING.txt
+share/doc/$DOC_NAME/LICENSE.txt
+share/doc/$DOC_NAME/THIRD-PARTY-NOTICES.txt
 EOF_PLIST
 
 echo "Staged local package image root: $IMAGE_ROOT"
@@ -160,3 +181,5 @@ echo "  $PREFIX/bin/opencode"
 echo "  $PREFIX/libexec/opencode/opencode-bin"
 echo "  $PREFIX/share/doc/$DOC_NAME/README.txt"
 echo "  $PREFIX/share/doc/$DOC_NAME/TROUBLESHOOTING.txt"
+echo "  $PREFIX/share/doc/$DOC_NAME/LICENSE.txt"
+echo "  $PREFIX/share/doc/$DOC_NAME/THIRD-PARTY-NOTICES.txt"

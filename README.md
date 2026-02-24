@@ -54,3 +54,10 @@ Start here:
 - `port/` is a local packaging workspace (portable bundle + local `pkg_add` validation).
 - `ports-tree/` contains tracked ports-style skeleton files to copy into a real `/usr/ports` checkout.
 - Official `pkg_add opencode` requires an accepted OpenBSD port and mirror-built packages.
+
+
+## License
+
+This repository is licensed under MIT. See `LICENSE`.
+
+Portable bundles and local package staging include `LICENSE.txt` and `THIRD-PARTY-NOTICES.txt` in their documentation directories.

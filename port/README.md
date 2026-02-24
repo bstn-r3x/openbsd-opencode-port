@@ -39,6 +39,12 @@ Common overrides:
 - `./port/scripts/test.sh --archive /path/to/opencode-openbsd-amd64-<version>.tgz --tmux-smoke`
 - `./port/scripts/test.sh --archive /path/to/opencode-openbsd-amd64-<version>.tgz --tmux-smoke --allow-host-state`
 
+## Licensing and Notices
+
+Portable bundles and local package staging include `LICENSE.txt` and `THIRD-PARTY-NOTICES.txt` in their documentation directories.
+
+The notices file is a summary and points to `openbsd-opencode-port`, `opencode-openbsd`, and `bun-openbsd` for full license texts and source context.
+
 ## Portable Bundle (End-User Workflow)
 
 ```sh

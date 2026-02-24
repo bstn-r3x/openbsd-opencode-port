@@ -25,6 +25,7 @@ die() {
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PORT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+REPO_ROOT=$(CDPATH= cd -- "$PORT_DIR/.." && pwd)
 
 DEFAULT_BIN="/srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"
 BIN_PATH="$DEFAULT_BIN"
@@ -92,6 +93,10 @@ mkdir -p "$STAGE_DIR/bin" \
          "$STAGE_DIR/libexec/opencode" \
          "$STAGE_DIR/share/doc/opencode-openbsd"
 
+if [ -f "$REPO_ROOT/LICENSE" ]; then
+  cp -p "$REPO_ROOT/LICENSE" "$STAGE_DIR/share/doc/opencode-openbsd/LICENSE.txt"
+fi
+
 cp -p "$PORT_DIR/templates/opencode-wrapper.sh" "$STAGE_DIR/bin/opencode"
 cp -p "$BIN_PATH" "$STAGE_DIR/libexec/opencode/opencode-bin"
 chmod 755 "$STAGE_DIR/bin/opencode" "$STAGE_DIR/libexec/opencode/opencode-bin"
@@ -122,6 +127,20 @@ Troubleshooting (portable bundle)
 2. Wrapper reports missing runtime binary:
    - Ensure bundle was extracted completely and path layout is intact
    - Run via bin/opencode from inside the extracted bundle tree
+DOC
+
+cat > "$STAGE_DIR/share/doc/opencode-openbsd/THIRD-PARTY-NOTICES.txt" <<'DOC'
+Third-party notices (summary)
+
+This portable bundle contains an OpenCode binary built from the OpenBSD porting forks.
+License texts and notices may apply to OpenCode, Bun, OpenTUI, and their dependencies.
+
+Repository-level license files:
+- openbsd-opencode-port (this repo): LICENSE (MIT)
+- opencode-openbsd: LICENSE (MIT)
+- bun-openbsd: LICENSE.md (includes Bun + JavaScriptCore/WebKit notice details)
+
+For full source and license context, see the published project repositories.
 DOC
 
 cat > "$STAGE_DIR/share/doc/opencode-openbsd/BUNDLE-METADATA.txt" <<DOC
