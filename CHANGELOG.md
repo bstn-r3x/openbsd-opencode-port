@@ -9,11 +9,7 @@ Port Bun (JavaScript runtime) to OpenBSD 7.8 amd64, ultimately to run OpenCode v
 - **NFS**: Mac `<MAC_WORKSPACE>/opencode-port` → OpenBSD `<mac-shared-mount>` (mount with `-o tcp,rw,soft,intr,noatime`)
   - Mac IP: <lan-ip> (Ethernet interface reachable from the OpenBSD host)
   - Note: Mac also has <lan-ip> on WiFi interface (not used for this workflow)
-- **Disk layout** (<openbsd-host> — all build dirs under /home via symlinks from /usr/obj):
-  - `/home` — 97GB free (was 16GB on old VM)
-  - `/usr/obj` — symlinks to /home (bun-build, jsc-build, bun-vendor)
-  - `<mac-shared-mount>` — NFS from Mac
-- **doas**: configured with `permit nopass admin` in `/etc/doas.conf`
+
 
 ## Phase Plan Overview
 
