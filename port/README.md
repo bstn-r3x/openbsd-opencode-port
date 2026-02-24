@@ -80,7 +80,15 @@ OpenCode may automatically use host-local auth/session state from standard XDG p
 
 This is runtime behavior on the host and is **not** caused by the package payload itself.
 
-For reproducible and safe tmux validation (especially on shared/test hosts), run OpenCode with isolated `HOME/XDG_*` state using `./port/scripts/run-sterile.sh` (build host) or an equivalent `env -i` wrapper (test VM).
+For reproducible and safe tmux validation (especially on shared/test hosts), run OpenCode with isolated `HOME/XDG_*` state using `./port/scripts/run-sterile.sh` (build host) or an equivalent wrapper that preserves tmux/terminal env (test VM).
+
+On shared hosts, also verify auth state file permissions before interactive testing:
+
+```sh
+stat -f "%Sp %N" ~/.local/share/opencode ~/.local/share/opencode/auth.json
+chmod 700 ~/.local/share/opencode
+chmod 600 ~/.local/share/opencode/auth.json
+```
 
 ## Local Package (pkg_add) Goal and Standard Install Paths
 
@@ -110,7 +118,7 @@ User runtime data is not packaged into system directories; it remains in the use
 
 ```sh
 # Inspect runtime dependencies / portability signals
-./port/scripts/pkg-inventory.sh
+./port/scripts/pkg-inventory.sh --fail-on-private-path
 
 # Stage a package image tree under port/pkg-stage/image/ using /usr/local/... paths
 ./port/scripts/pkg-stage.sh --force
@@ -166,7 +174,7 @@ ls -l \
 
 # Visible tmux TUI test (sterile HOME/XDG state so host auth/session data is not reused)
 TERM=xterm-256color tmux -u new-session -s opencode-pkg-visible \
-  'ST=/tmp/opencode-sterile; rm -rf "$ST"; mkdir -p "$ST/home" "$ST/xdg-config" "$ST/xdg-data" "$ST/xdg-state" "$ST/xdg-cache"; env -i HOME="$ST/home" XDG_CONFIG_HOME="$ST/xdg-config" XDG_DATA_HOME="$ST/xdg-data" XDG_STATE_HOME="$ST/xdg-state" XDG_CACHE_HOME="$ST/xdg-cache" PATH=/bin:/usr/bin:/usr/local/bin TERM=xterm-256color /usr/local/bin/opencode'
+  'ST=/tmp/opencode-sterile; rm -rf "$ST"; mkdir -p "$ST/home" "$ST/xdg-config" "$ST/xdg-data" "$ST/xdg-state" "$ST/xdg-cache"; unset OPENAI_API_KEY OPENAI_ACCESS_TOKEN OPENAI_API_BASE OPENAI_BASE_URL ANTHROPIC_API_KEY OPENCODE_API_KEY CODEX_API_KEY; env HOME="$ST/home" XDG_CONFIG_HOME="$ST/xdg-config" XDG_DATA_HOME="$ST/xdg-data" XDG_STATE_HOME="$ST/xdg-state" XDG_CACHE_HOME="$ST/xdg-cache" PATH=/bin:/usr/bin:/usr/local/bin TERM=xterm-256color /usr/local/bin/opencode'
 # Detach with Ctrl-b d after confirming rendering/input
 
 # Uninstall / reinstall validation
