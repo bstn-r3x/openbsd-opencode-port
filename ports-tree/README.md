@@ -13,13 +13,13 @@ Current status:
 - it still needs a real distfile/source build strategy before upstream submission
 
 
-Ports workspace setup on bstn (needed to run `make package` as a normal user):
+Ports workspace setup on a maintainer OpenBSD host (needed to run `make package` as a normal user):
 - `/usr/ports` installed from official OpenBSD 7.8 `ports.tar.gz` (verified with `signify`)
 - writable work dirs created: `/usr/ports/pobj`, `/usr/ports/distfiles`, `/usr/ports/packages`, `/usr/ports/plist`
 
 
-Validated source-distfile prep findings (bstn):
+Validated source-distfile prep findings (on a maintainer OpenBSD host):
 - clean-clone filtered install works with `bun install --frozen-lockfile --filter=./packages/opencode`
 - filtered dependency payload measured ~516M (`node_modules/.bun`) instead of ~3.8G naive monorepo store
-- build smoke works with `packages/opencode/script/build.ts --single --skip-install` when `TMPDIR` has space (use `/srv/opencode-port/tmp`)
+- build smoke works with `packages/opencode/script/build.ts --single --skip-install` when `TMPDIR` has space (use a spacious build TMPDIR, for example `<tmpdir>`)
 - build host also needs `node`/`node-gyp`, `python3`, and `gmake` for dependency install scripts

@@ -31,4 +31,4 @@ Scripts:
 OpenBSD source-distfile prep notes:
 - `source-vendor-prep.sh` validates a clean-clone filtered Bun install/build workflow for Option 1 (source-distfile) ports work.
 - It requires `node`, `node-gyp`, `python3`, and `gmake` in `PATH` for dependency install scripts.
-- Use a spacious `TMPDIR` (for example `/srv/opencode-port/tmp`) to avoid Bun compile `ENOSPC` failures on small `/tmp`.
+- Use a spacious `TMPDIR` (for example `<workspace-root>/tmp`) to avoid Bun compile `ENOSPC` failures on small `/tmp`.

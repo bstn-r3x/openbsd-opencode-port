@@ -11,17 +11,17 @@ Bun cannot be built natively on OpenBSD due to Zig's ELF linker bugs. Instead, Z
 | Machine | Role | Details |
 |---------|------|---------|
 | **Mac host** | Cross-compilation, codegen, Claude Code | Workspace: `<MAC_WORKSPACE>/opencode-port` |
-| **openbsd-host** (OpenBSD 7.8) | Linking, C++ compilation, runtime | `ssh openbsd-host` (192.168.x.x), Intel i5-8350U (8 cores), 16GB RAM |
+| **<openbsd-host>** (OpenBSD 7.8) | Linking, C++ compilation, runtime | `ssh <openbsd-host>` (<lan-ip>), Intel i5-8350U (8 cores), 16GB RAM |
 
 ### Placeholder Conventions (sanitized public docs)
 
 This public repo uses placeholders in documentation to avoid publishing personal/local infrastructure identifiers.
 
-- `openbsd-host`: your OpenBSD host SSH alias (replace with your own, for example `mybsd`)
+- `<openbsd-host>`: your OpenBSD host SSH alias (replace with your own, for example `mybsd`)
 - `<MAC_WORKSPACE>/opencode-port`: local macOS workspace root used for orchestration/codegen
-- `192.168.x.x`: redacted LAN addresses from the original private environment
+- `<lan-ip>`: redacted LAN addresses from the original private environment
 
-The recommended OpenBSD workspace path remains `/srv/opencode-port` unless you intentionally change it.
+Examples below use `<workspace-root>` for the OpenBSD workspace path; adjust it to your local checkout layout.
 
 ### Directory Structure
 
@@ -37,7 +37,7 @@ opencode-src/            # OpenCode source (patched for OpenBSD)
 CHANGELOG.md             # Engineering history and technical record
 ```
 
-**openbsd-host (`/srv/opencode-port/`):**
+**<openbsd-host> (`<workspace-root>/`):**
 ```
 bun                      # Final linked binary (91MB PIE ELF)
 bun-build/               # CMake build dir (C++ objects, libbun-profile.a)
@@ -60,9 +60,9 @@ opencode/                # OpenCode source + node_modules
 zig3                     # Zig compiler (OpenBSD native, rarely used)
 ```
 
-**Symlinks on openbsd-host:**
-- `/usr/obj/bun-build` → `<OLD_OPENBSD_WORKSPACE>/bun-build` (disk space)
-- `/usr/obj/jsc-build` → `<OLD_OPENBSD_WORKSPACE>/jsc-build`
+**Symlinks on <openbsd-host>:**
+- `/usr/obj/bun-build` → `<legacy-workspace-root>/bun-build` (disk space)
+- `/usr/obj/jsc-build` → `<legacy-workspace-root>/jsc-build`
 
 ### Orchestration Repo Layout (public repo)
 
@@ -127,7 +127,7 @@ python3 strip_debug_sections.py bun-source/build/bun-zig.o bun-source/build/bun-
 
 Reduces 242MB → ~38MB. Removes `.debug_*` and `.rela.debug_*` sections while preserving all relocations.
 
-### Stage 3: Fix ELF ABI byte and copy to openbsd-host
+### Stage 3: Fix ELF ABI byte and copy to <openbsd-host>
 
 The Zig cross-compiler writes ELF OS/ABI byte as 0 (ELFOSABI_NONE). OpenBSD's linker expects 12 (ELFOSABI_OPENBSD).
 
@@ -135,57 +135,57 @@ The Zig cross-compiler writes ELF OS/ABI byte as 0 (ELFOSABI_NONE). OpenBSD's li
 # Fix ABI byte (offset 7 in ELF header)
 printf '\x0c' | dd of=bun-source/build/bun-zig-stripped.o bs=1 seek=7 count=1 conv=notrunc
 
-# Copy to openbsd-host
-scp bun-source/build/bun-zig-stripped.o openbsd-host:/srv/opencode-port/bun-build/bun-zig.o
+# Copy to <openbsd-host>
+scp bun-source/build/bun-zig-stripped.o <openbsd-host>:<workspace-root>/bun-build/bun-zig.o
 ```
 
-Note: the file is renamed to `bun-zig.o` on openbsd-host (the link command references this name).
+Note: the file is renamed to `bun-zig.o` on <openbsd-host> (the link command references this name).
 
-### Stage 4: Link on openbsd-host
+### Stage 4: Link on <openbsd-host>
 
 **Critical: `bun-zig.o` must NOT be inside `libbun-profile.a`.** If it is (from a previous `ar r` step), remove it first:
 
 ```bash
-ssh openbsd-host "cd /srv/opencode-port/bun-build && ar t libbun-profile.a | grep bun-zig && ar d libbun-profile.a bun-zig.o || echo 'not in archive'"
+ssh <openbsd-host> "cd <workspace-root>/bun-build && ar t libbun-profile.a | grep bun-zig && ar d libbun-profile.a bun-zig.o || echo 'not in archive'"
 ```
 
 Then link:
 
 ```bash
-ssh openbsd-host 'clang++ -o /srv/opencode-port/bun \
+ssh <openbsd-host> 'clang++ -o <workspace-root>/bun \
   -Wl,--strip-debug \
-  /srv/opencode-port/bun-build/bun-zig.o \
-  /srv/opencode-port/openbsd_stubs_c.o \
-  /srv/opencode-port/openbsd_stubs_cpp.o \
-  /srv/opencode-port/GeneratedFakeTimersConfig.o \
-  /srv/opencode-port/GeneratedSSLConfig.o \
-  /srv/opencode-port/GeneratedSocketConfig.o \
-  /srv/opencode-port/GeneratedSocketConfigBinaryType.o \
-  /srv/opencode-port/GeneratedSocketConfigHandlers.o \
-  /srv/opencode-port/v8_array_bridge.o \
-  -Wl,--whole-archive /srv/opencode-port/bun-build/libbun-profile.a -Wl,--no-whole-archive \
-  /srv/opencode-port/jsc-build/lib/libJavaScriptCore.a \
-  /srv/opencode-port/jsc-build/lib/libWTF.a \
-  /srv/opencode-port/jsc-build/lib/libbmalloc.a \
-  /srv/opencode-port/libuv-build/libuv.a \
-  /srv/opencode-port/bun-build/boringssl/libcrypto.a \
-  /srv/opencode-port/bun-build/boringssl/libssl.a \
-  /srv/opencode-port/bun-build/boringssl/libdecrepit.a \
-  /srv/opencode-port/bun-build/mimalloc/libmimalloc.a \
-  /srv/opencode-port/bun-build/zlib/libz.a \
-  /srv/opencode-port/bun-build/brotli/libbrotlicommon.a \
-  /srv/opencode-port/bun-build/brotli/libbrotlidec.a \
-  /srv/opencode-port/bun-build/brotli/libbrotlienc.a \
-  /srv/opencode-port/bun-build/cares/lib/libcares.a \
-  /srv/opencode-port/bun-build/highway/libhwy.a \
-  /srv/opencode-port/bun-build/libdeflate/libdeflate.a \
-  /srv/opencode-port/bun-build/lshpack/libls-hpack.a \
-  /srv/opencode-port/bun-build/libarchive/libarchive/libarchive.a \
-  /srv/opencode-port/bun-build/hdrhistogram/src/libhdr_histogram_static.a \
-  /srv/opencode-port/bun-build/zstd/lib/libzstd.a \
-  /srv/opencode-port/bun-build/sqlite/libsqlite3.a \
-  /srv/opencode-port/bun-build/tinycc/libtcc.a \
-  /srv/opencode-port/bun-build/lolhtml/release/liblolhtml.a \
+  <workspace-root>/bun-build/bun-zig.o \
+  <workspace-root>/openbsd_stubs_c.o \
+  <workspace-root>/openbsd_stubs_cpp.o \
+  <workspace-root>/GeneratedFakeTimersConfig.o \
+  <workspace-root>/GeneratedSSLConfig.o \
+  <workspace-root>/GeneratedSocketConfig.o \
+  <workspace-root>/GeneratedSocketConfigBinaryType.o \
+  <workspace-root>/GeneratedSocketConfigHandlers.o \
+  <workspace-root>/v8_array_bridge.o \
+  -Wl,--whole-archive <workspace-root>/bun-build/libbun-profile.a -Wl,--no-whole-archive \
+  <workspace-root>/jsc-build/lib/libJavaScriptCore.a \
+  <workspace-root>/jsc-build/lib/libWTF.a \
+  <workspace-root>/jsc-build/lib/libbmalloc.a \
+  <workspace-root>/libuv-build/libuv.a \
+  <workspace-root>/bun-build/boringssl/libcrypto.a \
+  <workspace-root>/bun-build/boringssl/libssl.a \
+  <workspace-root>/bun-build/boringssl/libdecrepit.a \
+  <workspace-root>/bun-build/mimalloc/libmimalloc.a \
+  <workspace-root>/bun-build/zlib/libz.a \
+  <workspace-root>/bun-build/brotli/libbrotlicommon.a \
+  <workspace-root>/bun-build/brotli/libbrotlidec.a \
+  <workspace-root>/bun-build/brotli/libbrotlienc.a \
+  <workspace-root>/bun-build/cares/lib/libcares.a \
+  <workspace-root>/bun-build/highway/libhwy.a \
+  <workspace-root>/bun-build/libdeflate/libdeflate.a \
+  <workspace-root>/bun-build/lshpack/libls-hpack.a \
+  <workspace-root>/bun-build/libarchive/libarchive/libarchive.a \
+  <workspace-root>/bun-build/hdrhistogram/src/libhdr_histogram_static.a \
+  <workspace-root>/bun-build/zstd/lib/libzstd.a \
+  <workspace-root>/bun-build/sqlite/libsqlite3.a \
+  <workspace-root>/bun-build/tinycc/libtcc.a \
+  <workspace-root>/bun-build/lolhtml/release/liblolhtml.a \
   /usr/local/lib/libicudata.a \
   /usr/local/lib/libicui18n.a \
   /usr/local/lib/libicuuc.a \
@@ -193,7 +193,7 @@ ssh openbsd-host 'clang++ -o /srv/opencode-port/bun \
   -fno-exceptions -fno-rtti -Wl,--allow-multiple-definition'
 ```
 
-**Takes ~2 minutes.** Output: `/srv/opencode-port/bun` (~91MB PIE ELF).
+**Takes ~2 minutes.** Output: `<workspace-root>/bun` (~91MB PIE ELF).
 
 #### Why this link order matters
 
@@ -208,19 +208,19 @@ ssh openbsd-host 'clang++ -o /srv/opencode-port/bun \
 
 ```bash
 # Version check
-ssh openbsd-host "/srv/opencode-port/bun --version"
+ssh <openbsd-host> "<workspace-root>/bun --version"
 # Expected: 1.3.10
 
 # Quick eval
-ssh openbsd-host '/srv/opencode-port/bun -e "console.log(1+1)"'
+ssh <openbsd-host> '<workspace-root>/bun -e "console.log(1+1)"'
 # Expected: 2
 
 # Launch OpenCode TUI (interactive)
-ssh -t openbsd-host "cd /srv/opencode-port/opencode/packages/opencode && /srv/opencode-port/bun run --conditions=browser src/index.ts"
+ssh -t <openbsd-host> "cd <workspace-root>/opencode/packages/opencode && <workspace-root>/bun run --conditions=browser src/index.ts"
 # Expected: TUI renders and stays alive, keyboard input works
 
 # Check CPU at idle (in another terminal)
-ssh openbsd-host "top -b -d1 | head -20"
+ssh <openbsd-host> "top -b -d1 | head -20"
 # Target: < 15% CPU for bun process
 ```
 
@@ -248,12 +248,12 @@ Direct launch commands used for interactive validation (appendix material):
 
 Source mode:
 ```sh
-ssh -t openbsd-host 'cd /srv/opencode-port/opencode/packages/opencode && /srv/opencode-port/bun run --conditions=browser src/index.ts'
+ssh -t <openbsd-host> 'cd <workspace-root>/opencode/packages/opencode && <workspace-root>/bun run --conditions=browser src/index.ts'
 ```
 
 Compiled mode:
 ```sh
-ssh -t openbsd-host 'cd /srv/opencode-port/opencode/packages/opencode && /srv/opencode-port/opencode-bin'
+ssh -t <openbsd-host> 'cd <workspace-root>/opencode/packages/opencode && <workspace-root>/opencode-bin'
 ```
 
 ### OpenTUI loader portability fix (OpenBSD)
@@ -265,7 +265,7 @@ The OpenBSD port patches this in source control at `packages/opencode/script/bui
 1. Try the original package import first.
 2. On OpenBSD only, fall back to a relative sibling path import (`../core-openbsd-x64/index.ts`) using `import.meta.url`.
 
-This avoids machine-specific absolute path edits in `node_modules` (for example `/srv/opencode-port/...`) and makes compiled builds relocatable enough for bundle/package work.
+This avoids machine-specific absolute path edits in `node_modules` (for example `<workspace-root>/...`) and makes compiled builds relocatable enough for bundle/package work.
 
 ### Stage 5B: Test evidence and release gate notes
 
@@ -285,7 +285,7 @@ When validating a new build or preparing a stable promotion:
 
 Zig's V8 bindings emit symbols mangled for libstdc++ (`std::function`), but OpenBSD uses libc++ (`std::__1::function`). The bridge is an assembly file that defines the expected symbol and jumps to the real one.
 
-Source: `/srv/opencode-port/v8_array_bridge.S` (on openbsd-host).
+Source: `<workspace-root>/v8_array_bridge.S` (on <openbsd-host>).
 
 ### openbsd_stubs_c.o / openbsd_stubs_cpp.o
 

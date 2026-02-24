@@ -21,7 +21,7 @@ Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compi
 
 ## Current reliability risks
 - `CHANGELOG.md` contains historical mixed-era status notes and should be treated as engineering history rather than the current release summary.
-- OpenTUI import portability fix is now captured as a source-controlled OpenCode build patch (`packages/opencode/script/build.ts`) that rewrites the installed `@opentui/core` loader with an OpenBSD relative fallback; local rebuild + relocated binary smoke validation completed on `openbsd-host`, cross-machine validation still pending.
+- OpenTUI import portability fix is now captured as a source-controlled OpenCode build patch (`packages/opencode/script/build.ts`) that rewrites the installed `@opentui/core` loader with an OpenBSD relative fallback; local rebuild + relocated binary smoke validation completed on `<openbsd-host>`, cross-machine validation still pending.
 - Enter-submit fix has been applied and user-verified in both source and compiled tmux sessions.
 - Some runtime issues remain open and marked non-blocking:
   - `child_process.execSync/spawnSync` intermittent hang.
@@ -39,7 +39,7 @@ Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compi
 - Remaining Enter work: maintain regression coverage so stale-state submit behavior does not regress.
 
 ## Live baseline executed today (February 21, 2026)
-- Remote SSH access to `openbsd-host` is working with key-based auth.
+- Remote SSH access to `<openbsd-host>` is working with key-based auth.
 - Automated baseline report generated:
   - `artifacts/openbsd-baseline-20260221-191735.md`
 - Current automated checks in that report:
@@ -62,7 +62,7 @@ Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compi
 
 ## Completion criteria for this project
 1. Fully reproducible source-controlled build path (no manual cache/node_modules edits).
-2. Automated baseline checks pass on `openbsd-host` (Bun + OpenCode source + OpenCode compiled).
+2. Automated baseline checks pass on `<openbsd-host>` (Bun + OpenCode source + OpenCode compiled).
 3. Remaining OpenBSD runtime bugs either fixed or explicitly documented with acceptance/impact.
 4. Documentation reflects a canonical release summary (`RELEASE.md`) and accurate operational guidance in the build/contribution docs.
 
@@ -88,7 +88,7 @@ Port Bun v1.3.10 and OpenCode to OpenBSD 7.8 amd64, including `bun build --compi
 
 ### Phase 2: Reproducibility hardening
 - Goal: remove off-tree/manual patches and make rebuild deterministic.
-- Update (February 22, 2026): OpenTUI loader portability fallback has been moved into a source-controlled OpenCode build patch and validated on `openbsd-host` (local rebuild + relocated compiled binary launch). Fresh-machine validation is the next step.
+- Update (February 22, 2026): OpenTUI loader portability fallback has been moved into a source-controlled OpenCode build patch and validated on `<openbsd-host>` (local rebuild + relocated compiled binary launch). Fresh-machine validation is the next step.
 - Tasks:
   1. Move any required runtime fix from cache or `node_modules` edits into source-controlled patches.
   2. Ensure OpenTUI OpenBSD loading behavior is captured in source-controlled changes.

@@ -5,14 +5,14 @@ Port Bun (JavaScript runtime) to OpenBSD 7.8 amd64, ultimately to run OpenCode v
 
 ## Environment
 - **Mac host**: runs Claude Code, workspace at `<MAC_WORKSPACE>/opencode-port`
-- **OpenBSD 7.8 physical server (openbsd-host)**: `ssh openbsd-host` (192.168.x.x), Lenovo ThinkPad, Intel i5-8350U (8 cores), 16.4GB RAM, OpenBSD 7.8 amd64, Clang 19.1.7, CMake 3.31.8, ICU 77.1, Rust
-- **NFS**: Mac `<MAC_WORKSPACE>/opencode-port` → OpenBSD `/mnt/mac-shared` (mount with `-o tcp,rw,soft,intr,noatime`)
-  - Mac IP: 192.168.x.x (Ethernet interface reachable from the OpenBSD host)
-  - Note: Mac also has 192.168.x.x on WiFi interface (not used for this workflow)
-- **Disk layout** (openbsd-host — all build dirs under /home via symlinks from /usr/obj):
+- **OpenBSD 7.8 physical server (<openbsd-host>)**: `ssh <openbsd-host>` (<lan-ip>), Lenovo ThinkPad, Intel i5-8350U (8 cores), 16.4GB RAM, OpenBSD 7.8 amd64, Clang 19.1.7, CMake 3.31.8, ICU 77.1, Rust
+- **NFS**: Mac `<MAC_WORKSPACE>/opencode-port` → OpenBSD `<mac-shared-mount>` (mount with `-o tcp,rw,soft,intr,noatime`)
+  - Mac IP: <lan-ip> (Ethernet interface reachable from the OpenBSD host)
+  - Note: Mac also has <lan-ip> on WiFi interface (not used for this workflow)
+- **Disk layout** (<openbsd-host> — all build dirs under /home via symlinks from /usr/obj):
   - `/home` — 97GB free (was 16GB on old VM)
   - `/usr/obj` — symlinks to /home (bun-build, jsc-build, bun-vendor)
-  - `/mnt/mac-shared` — NFS from Mac
+  - `<mac-shared-mount>` — NFS from Mac
 - **doas**: configured with `permit nopass admin` in `/etc/doas.conf`
 
 ## Phase Plan Overview
@@ -26,7 +26,7 @@ Port Bun (JavaScript runtime) to OpenBSD 7.8 amd64, ultimately to run OpenCode v
 | E | Run codegen on Mac, build Bun on OpenBSD | DONE — binary runs, 27/27 tests pass (fetch+spawn+connect all work) |
 | F | Build OpenCode with Bun | **DONE** — TUI fully working in both source AND compiled modes. Keyboard input works. `onTick` event dispatch fix (`isMac` → `isBSD`) was the root cause. |
 | G | OpenCode source patches for OpenBSD | DONE — 6 files patched: watcher, pty, shell, clipboard, build.ts, bin/opencode |
-| H | Rebuild Bun with code improvements | DONE — Zig cross-compile on Mac, relink on openbsd-host. Fixed io.zig kqueue routing + stat64 export wrappers. |
+| H | Rebuild Bun with code improvements | DONE — Zig cross-compile on Mac, relink on <openbsd-host>. Fixed io.zig kqueue routing + stat64 export wrappers. |
 | I | Fix OpenCode TUI CPU burn + black screen | **DONE** — CPU fixes (kevent timeout, JSC thread reduction) + TUI rendering fix (debug traces broke Solid.js lazy evaluation). |
 
 Note (February 21, 2026): this file contains both historical notes and current state snapshots from different sessions. Use `RELEASE.md`, `OPENCODE-PORT-BUILD-GUIDE.md`, and `CONTRIBUTE.md` for current operational guidance, and `artifacts/openbsd-baseline-20260221-191735.md` for the latest automated verification run.
@@ -35,7 +35,7 @@ Latest update (February 22, 2026):
 - OpenTUI native loader portability fix moved into source-controlled OpenCode build pipeline (`packages/opencode/script/build.ts`).
   - Build script now rewrites installed `@opentui/core` loader to keep package import first and add an OpenBSD-only relative fallback (`../core-openbsd-x64/index.ts`) when package-specifier import fails.
   - Patch is idempotent (marker-based) and runs even with `--skip-install`, so incremental rebuilds also receive the portability fix.
-  - Local validation on openbsd-host: rebuilt successfully (`--single --skip-install`), patched loader verified, and relocated compiled binary launched from `/tmp` without `/srv/opencode-port/...` OpenTUI path dependency.
+  - Local validation on <openbsd-host>: rebuilt successfully (`--single --skip-install`), patched loader verified, and relocated compiled binary launched from `/tmp` without `<workspace-root>/...` OpenTUI path dependency.
 - Cross-machine validation from published repos remains pending (planned on a second OpenBSD 7.8 host).
 
 Latest update (February 21, 2026):
@@ -74,10 +74,10 @@ OpenCode TUI burns 40-92% CPU at idle on OpenBSD with 7 JSC threads in constant 
 1. Zig cross-compile on Mac: `zig build obj` with OpenBSD target → `bun-zig.o`
 2. Strip debug sections: `strip_debug_sections.py` → `bun-zig-stripped.o`
 3. Fix ELF OS/ABI: `printf '\x0c' | dd of=bun-zig.o bs=1 seek=7 count=1 conv=notrunc`
-4. Copy to openbsd-host: `cp /mnt/mac-shared/bun-source/build/bun-zig-stripped.o /srv/opencode-port/bun-build/`
-5. Recompile ZigGlobalObject.cpp on openbsd-host (manual clang++ from compile_commands.json)
+4. Copy to <openbsd-host>: `cp <mac-shared-mount>/bun-source/build/bun-zig-stripped.o <workspace-root>/bun-build/`
+5. Recompile ZigGlobalObject.cpp on <openbsd-host> (manual clang++ from compile_commands.json)
 6. Update libbun-profile.a: `ar r libbun-profile.a ZigGlobalObject.cpp.o`
-7. Relink on openbsd-host (same link command as Phase E)
+7. Relink on <openbsd-host> (same link command as Phase E)
 
 ### Testing Status
 - [ ] Binary starts and runs: bun --version → 1.3.10
@@ -102,7 +102,7 @@ OpenCode TUI burns 40-92% CPU at idle on OpenBSD with 7 JSC threads in constant 
 
 ## Phase B: Build stage3 zig compiler (DONE)
 
-- **Binary**: `/srv/opencode-port/zig3` — 177MB ELF 64-bit, x86-64
+- **Binary**: `<workspace-root>/zig3` — 177MB ELF 64-bit, x86-64
 - **Version**: 0.15.2 (oven-sh/zig fork with `#` private field syntax)
 - **Features**: proper DT_NEEDED, .note.openbsd.ident
 - **Note**: zig3 has the same `needed=false` bug — always use build-obj + cc for final linking on OpenBSD
@@ -182,16 +182,16 @@ OpenCode TUI burns 40-92% CPU at idle on OpenBSD with 7 JSC threads in constant 
 ## Phase D: Build JSC for OpenBSD (DONE)
 
 ### Output
-- **Library**: `/srv/opencode-port/jsc-build/lib/libJavaScriptCore.a` (thin archive, 187 object files, 92,900 symbols, 121MB total objects)
-- **Support libs**: `/srv/opencode-port/jsc-build/lib/libWTF.a` (304KB), `/srv/opencode-port/jsc-build/lib/libbmalloc.a` (29KB)
-- **Headers**: `/srv/opencode-port/jsc-build/JavaScriptCore/Headers/` (8 public headers)
-- **Private headers**: `/srv/opencode-port/jsc-build/JavaScriptCore/PrivateHeaders/`
-- **Derived sources**: `/srv/opencode-port/jsc-build/JavaScriptCore/DerivedSources/`
+- **Library**: `<workspace-root>/jsc-build/lib/libJavaScriptCore.a` (thin archive, 187 object files, 92,900 symbols, 121MB total objects)
+- **Support libs**: `<workspace-root>/jsc-build/lib/libWTF.a` (304KB), `<workspace-root>/jsc-build/lib/libbmalloc.a` (29KB)
+- **Headers**: `<workspace-root>/jsc-build/JavaScriptCore/Headers/` (8 public headers)
+- **Private headers**: `<workspace-root>/jsc-build/JavaScriptCore/PrivateHeaders/`
+- **Derived sources**: `<workspace-root>/jsc-build/JavaScriptCore/DerivedSources/`
 - **Config**: `ENABLE_REMOTE_INSPECTOR=OFF`, `USE_BUN_JSC_ADDITIONS=ON`, `maxMicrotaskArguments=4`
 
 ### CMake configuration
 ```bash
-cmake -S /srv/opencode-port/webkit-build \
+cmake -S <workspace-root>/webkit-build \
   -DPORT=JSCOnly -DENABLE_STATIC_JSC=ON \
   -DUSE_BUN_JSC_ADDITIONS=ON -DUSE_BUN_EVENT_LOOP=ON \
   -DENABLE_BUN_SKIP_FAILING_ASSERTIONS=ON \
@@ -272,7 +272,7 @@ All 77 codegen files generated on Mac, including:
 
 **Output**: `<MAC_WORKSPACE>/opencode-port/bun-source/build/bun-zig.o`
 - ~242MB ELF 64-bit LSB relocatable, x86-64, version 1 (OpenBSD), with debug_info, not stripped
-- Copied to `/srv/opencode-port/bun-build/bun-zig.o` on OpenBSD
+- Copied to `<workspace-root>/bun-build/bun-zig.o` on OpenBSD
 - Rebuilt after O_* flag fix (2026-02-17)
 
 ### CMake Patches Applied
@@ -296,13 +296,13 @@ All 77 codegen files generated on Mac, including:
 
 Working cmake command (with BUN_CPP_ONLY=ON to build just C++ static library):
 ```bash
-cmake -S /mnt/mac-shared/bun-source -B /usr/obj/bun-build \
+cmake -S <mac-shared-mount>/bun-source -B /usr/obj/bun-build \
   -DCMAKE_BUILD_TYPE=Release -DSKIP_CODEGEN=ON -DBUN_CPP_ONLY=ON \
   -DCODEGEN_PATH=/usr/obj/bun-build/codegen \
   -DWEBKIT_PATH=/usr/obj/jsc-build -DENABLE_LLVM=OFF \
   -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
-  -DZIG_EXECUTABLE=/srv/opencode-port/zig3 -DZIG_PATH=/srv/opencode-port/oven-zig \
-  -DZIG_LIB_DIR=/srv/opencode-port/oven-zig/lib \
+  -DZIG_EXECUTABLE=<workspace-root>/zig3 -DZIG_PATH=<workspace-root>/oven-zig \
+  -DZIG_LIB_DIR=<workspace-root>/oven-zig/lib \
   -DVENDOR_PATH=/usr/obj/bun-vendor -G 'Unix Makefiles'
 ```
 
@@ -318,7 +318,7 @@ All built on OpenBSD with `TMPDIR=/usr/obj/bun-build/tmp make <target>`:
 Successfully compiled all ~780 C++ and C source files into `libbun-profile.a` (6.5G static archive).
 All compiled with `-fPIC` for PIE compatibility.
 
-Build on openbsd-host: `cd /usr/obj/bun-build && ulimit -d 6291456 && TMPDIR=/usr/obj/bun-build/tmp make -j8`
+Build on <openbsd-host>: `cd /usr/obj/bun-build && ulimit -d 6291456 && TMPDIR=/usr/obj/bun-build/tmp make -j8`
 
 #### C++ Patches Applied for OpenBSD
 
@@ -373,7 +373,7 @@ All wrapped with `#if ENABLE(REMOTE_INSPECTOR)` guards, with stub `extern "C"` f
 
 ### Final Linking: DONE (binary runs!)
 
-**Server**: openbsd-host
+**Server**: <openbsd-host>
 
 #### Linking Issues Resolved
 
@@ -387,7 +387,7 @@ All wrapped with `#if ENABLE(REMOTE_INSPECTOR)` guards, with stub `extern "C"` f
 - Fix: Modified BuildBun.cmake to use `-fPIC` for OpenBSD, rebuilt ALL ~780 C++ files with `-fPIC`
 
 **3. ~270 undefined symbols — missing libuv + OS-specific functions**
-- **libuv (250+ `uv_*` symbols)**: Built libuv from source on openbsd-host
+- **libuv (250+ `uv_*` symbols)**: Built libuv from source on <openbsd-host>
 - **stat64/fstat64/lstat64**: Aliased to stat/fstat/lstat in `openbsd_stubs.c`
 - **`Bun__Os__getFreeMemory`**: Implemented via `sysctl(CTL_HW, HW_USERMEM64)`
 - **`sysctlbyname`**: Stubbed (returns -1)
@@ -407,40 +407,40 @@ All wrapped with `#if ENABLE(REMOTE_INSPECTOR)` guards, with stub `extern "C"` f
 
 #### Working Link Command
 ```bash
-clang++ -o /srv/opencode-port/bun \
+clang++ -o <workspace-root>/bun \
   -Wl,--strip-debug \
-  /srv/opencode-port/bun-build/bun-zig-stripped.o \
-  /srv/opencode-port/openbsd_stubs_c.o \
-  /srv/opencode-port/openbsd_stubs_cpp.o \
-  /srv/opencode-port/GeneratedFakeTimersConfig.o \
-  /srv/opencode-port/GeneratedSSLConfig.o \
-  /srv/opencode-port/GeneratedSocketConfig.o \
-  /srv/opencode-port/GeneratedSocketConfigBinaryType.o \
-  /srv/opencode-port/GeneratedSocketConfigHandlers.o \
-  /srv/opencode-port/v8_array_bridge.o \
-  -Wl,--whole-archive /srv/opencode-port/bun-build/libbun-profile.a -Wl,--no-whole-archive \
-  /srv/opencode-port/jsc-build/lib/libJavaScriptCore.a \
-  /srv/opencode-port/jsc-build/lib/libWTF.a \
-  /srv/opencode-port/jsc-build/lib/libbmalloc.a \
-  /srv/opencode-port/libuv-build/libuv.a \
-  /srv/opencode-port/bun-build/boringssl/libcrypto.a \
-  /srv/opencode-port/bun-build/boringssl/libssl.a \
-  /srv/opencode-port/bun-build/boringssl/libdecrepit.a \
-  /srv/opencode-port/bun-build/mimalloc/libmimalloc.a \
-  /srv/opencode-port/bun-build/zlib/libz.a \
-  /srv/opencode-port/bun-build/brotli/libbrotlicommon.a \
-  /srv/opencode-port/bun-build/brotli/libbrotlidec.a \
-  /srv/opencode-port/bun-build/brotli/libbrotlienc.a \
-  /srv/opencode-port/bun-build/cares/lib/libcares.a \
-  /srv/opencode-port/bun-build/highway/libhwy.a \
-  /srv/opencode-port/bun-build/libdeflate/libdeflate.a \
-  /srv/opencode-port/bun-build/lshpack/libls-hpack.a \
-  /srv/opencode-port/bun-build/libarchive/libarchive/libarchive.a \
-  /srv/opencode-port/bun-build/hdrhistogram/src/libhdr_histogram_static.a \
-  /srv/opencode-port/bun-build/zstd/lib/libzstd.a \
-  /srv/opencode-port/bun-build/sqlite/libsqlite3.a \
-  /srv/opencode-port/bun-build/tinycc/libtcc.a \
-  /srv/opencode-port/bun-build/lolhtml/release/liblolhtml.a \
+  <workspace-root>/bun-build/bun-zig-stripped.o \
+  <workspace-root>/openbsd_stubs_c.o \
+  <workspace-root>/openbsd_stubs_cpp.o \
+  <workspace-root>/GeneratedFakeTimersConfig.o \
+  <workspace-root>/GeneratedSSLConfig.o \
+  <workspace-root>/GeneratedSocketConfig.o \
+  <workspace-root>/GeneratedSocketConfigBinaryType.o \
+  <workspace-root>/GeneratedSocketConfigHandlers.o \
+  <workspace-root>/v8_array_bridge.o \
+  -Wl,--whole-archive <workspace-root>/bun-build/libbun-profile.a -Wl,--no-whole-archive \
+  <workspace-root>/jsc-build/lib/libJavaScriptCore.a \
+  <workspace-root>/jsc-build/lib/libWTF.a \
+  <workspace-root>/jsc-build/lib/libbmalloc.a \
+  <workspace-root>/libuv-build/libuv.a \
+  <workspace-root>/bun-build/boringssl/libcrypto.a \
+  <workspace-root>/bun-build/boringssl/libssl.a \
+  <workspace-root>/bun-build/boringssl/libdecrepit.a \
+  <workspace-root>/bun-build/mimalloc/libmimalloc.a \
+  <workspace-root>/bun-build/zlib/libz.a \
+  <workspace-root>/bun-build/brotli/libbrotlicommon.a \
+  <workspace-root>/bun-build/brotli/libbrotlidec.a \
+  <workspace-root>/bun-build/brotli/libbrotlienc.a \
+  <workspace-root>/bun-build/cares/lib/libcares.a \
+  <workspace-root>/bun-build/highway/libhwy.a \
+  <workspace-root>/bun-build/libdeflate/libdeflate.a \
+  <workspace-root>/bun-build/lshpack/libls-hpack.a \
+  <workspace-root>/bun-build/libarchive/libarchive/libarchive.a \
+  <workspace-root>/bun-build/hdrhistogram/src/libhdr_histogram_static.a \
+  <workspace-root>/bun-build/zstd/lib/libzstd.a \
+  <workspace-root>/bun-build/sqlite/libsqlite3.a \
+  <workspace-root>/bun-build/tinycc/libtcc.a \
+  <workspace-root>/bun-build/lolhtml/release/liblolhtml.a \
   /usr/local/lib/libicudata.a \
   /usr/local/lib/libicui18n.a \
   /usr/local/lib/libicuuc.a \
@@ -540,7 +540,7 @@ Also added fchdir+getcwd fallback in `sys.zig:2756` for `getFdPath` (works for d
 
 ## Current Runtime Test Results (2026-02-18)
 
-**Binary**: `/srv/opencode-port/bun` — 91.4MB PIE, Bun v1.3.10-canary.1, OpenBSD x64
+**Binary**: `<workspace-root>/bun` — 91.4MB PIE, Bun v1.3.10-canary.1, OpenBSD x64
 
 ### Passing Tests (27/27 after kqueue fix on 2026-02-18)
 
@@ -644,8 +644,8 @@ Pass `NULL, 0` for the eventlist so kevent only registers changes without consum
 3. **`bun install`** — WORKS for simple packages AND OpenCode's full monorepo (1884 packages in .bun store)
 4. **`bun build --compile`** — WORKS (compiles TS with 41 modules, compiled binary runs correctly)
 5. **20/20 runtime tests pass** with no crashes
-6. **All project files migrated** from `<OLD_OPENBSD_WORKSPACE>` to `/srv/opencode-port` on openbsd-host
-7. **OpenCode v1.2.6** (anomalyco/opencode) downloaded and extracted to `/srv/opencode-port/opencode`
+6. **All project files migrated** from `<legacy-workspace-root>` to `<workspace-root>` on <openbsd-host>
+7. **OpenCode v1.2.6** (anomalyco/opencode) downloaded and extracted to `<workspace-root>/opencode`
 8. **FIXED: `bun install` recursive nesting bug** — skip `node_modules/` in hardlink and copyfile paths
 9. **FIXED: `bun install` ENOSYS on extract** — construct package.json path instead of getFdPath on file FDs
 10. **BUILT: `libopentui.so` for OpenBSD** — native Zig build of @opentui/core (4.3MB, TUI rendering lib)
@@ -669,10 +669,10 @@ Pass `NULL, 0` for the eventlist so kevent only registers changes without consum
 # 2. Strip debug sections (10 seconds)
 python3 strip_debug_sections.py build/bun-zig.o build/bun-zig-stripped.o
 # 3. Copy to OpenBSD
-scp build/bun-zig-stripped.o openbsd-host:/srv/opencode-port/bun-build/bun-zig-stripped.o
-# NOTE: All openbsd-host paths moved from <OLD_OPENBSD_WORKSPACE> to /srv/opencode-port (2026-02-18)
+scp build/bun-zig-stripped.o <openbsd-host>:<workspace-root>/bun-build/bun-zig-stripped.o
+# NOTE: All <openbsd-host> paths moved from <legacy-workspace-root> to <workspace-root> (2026-02-18)
 # 4. Link on OpenBSD (2 minutes)
-clang++ -o /srv/opencode-port/bun ... bun-zig-stripped.o ...
+clang++ -o <workspace-root>/bun ... bun-zig-stripped.o ...
 ```
 
 ### Verified Working
@@ -749,8 +749,8 @@ Bun's package installer on OpenBSD stores all packages in `node_modules/.bun/<pk
 
 ### Compiled Binary: DONE (session 7)
 
-**Binary**: `/srv/opencode-port/opencode-bin` — 130MB ELF, OpenCode v1.2.6, standalone compiled
-**Build command**: `cd /srv/opencode-port/opencode/packages/opencode && OPENCODE_VERSION=1.2.6 OPENCODE_CHANNEL=latest /srv/opencode-port/bun-new run --conditions=browser script/build.ts --single --skip-install`
+**Binary**: `<workspace-root>/opencode-bin` — 130MB ELF, OpenCode v1.2.6, standalone compiled
+**Build command**: `cd <workspace-root>/opencode/packages/opencode && OPENCODE_VERSION=1.2.6 OPENCODE_CHANNEL=latest <workspace-root>/bun-new run --conditions=browser script/build.ts --single --skip-install`
 **Output**: `dist/opencode-openbsd-x64/bin/opencode`
 
 Verified working: `--help`, `models`, `serve`, `run "echo hi"` (LLM streaming + tool permissions), `--version` → 1.2.6
@@ -777,8 +777,8 @@ Verified working: `--help`, `models`, `serve`, `run "echo hi"` (LLM streaming + 
 
 **6. Successful Zig cross-compile + relink**
 - Zig cross-compile on Mac: `build ... obj -Dtarget=x86_64-openbsd-none -Doptimize=ReleaseFast`
-- Output: `bun-zig.o` (254MB), copied via NFS to openbsd-host
-- Relinked on openbsd-host with existing C++ libs → `/srv/opencode-port/bun-new` (95MB)
+- Output: `bun-zig.o` (254MB), copied via NFS to <openbsd-host>
+- Relinked on <openbsd-host> with existing C++ libs → `<workspace-root>/bun-new` (95MB)
 - Verified: `bun --version`, `bun -e 'console.log(...)'`, `Bun.file().text()` all work
 - **IO loop fix confirmed**: `Bun.file("/etc/myname").text()` succeeds (exercises tickKqueue)
 
@@ -788,7 +788,7 @@ Verified working: `--help`, `models`, `serve`, `run "echo hi"` (LLM streaming + 
 - Location: `vendor/tinycc/tccrun.c:309-315` → `CONFIG_RUNMEM_RO` default was 0
 - Fix: Added `__OpenBSD__` alongside `__APPLE__` in `CONFIG_RUNMEM_RO` detection → sets to 1
   - With `CONFIG_RUNMEM_RO=1`, `.text` gets rx (mode 0), other sections get rw (mode 2) — no rwx needed
-- Rebuilt TCC on openbsd-host (`cd /usr/obj/bun-build/tinycc && make -j4`), relinked bun, rebuilt OpenCode
+- Rebuilt TCC on <openbsd-host> (`cd /usr/obj/bun-build/tinycc && make -j4`), relinked bun, rebuilt OpenCode
 - Result: **TUI renders perfectly** — OpenCode banner, input box, model picker, keyboard shortcuts, status bar all display correctly
 
 **8. OpenCode TUI — multiple issues (INVESTIGATING)**
@@ -806,21 +806,21 @@ Verified working: `--help`, `models`, `serve`, `run "echo hi"` (LLM streaming + 
 - Fix: Built `libopentui.so` natively on OpenBSD from opentui 0.1.79 Zig source (which already supports x86_64-openbsd target)
 - Created fake `@opentui/core-openbsd-x64` package in node_modules with the built .so
 - Zig FFI calls work: `createRenderer()`, `setUseThread()`, `setupTerminal()` all succeed
-- Source: `/srv/opencode-port/opentui-zig/` → builds to `lib/x86_64-openbsd/libopentui.so` (4.3MB)
+- Source: `<workspace-root>/opentui-zig/` → builds to `lib/x86_64-openbsd/libopentui.so` (4.3MB)
 
 **Issue 8c: `process.stdin.isTTY` always `undefined` on OpenBSD (FIXED — session 9)**
 - Root cause: `c-bindings.cpp:498` had `#if OS(LINUX) || OS(DARWIN)` excluding OpenBSD from `Bun__isTTY()` function
 - Fix: Changed to `#if OS(LINUX) || OS(DARWIN) || OS(OPENBSD)` — one-line change
-- Rebuilt: Recompiled c-bindings.cpp on openbsd-host, updated libbun-profile.a, stripped bun-zig.o (254→38MB), relinked
+- Rebuilt: Recompiled c-bindings.cpp on <openbsd-host>, updated libbun-profile.a, stripped bun-zig.o (254→38MB), relinked
 - Verified: `process.stdin.isTTY` / `stdout.isTTY` / `stderr.isTTY` all return `true` on real TTY via tmux
 - Also verified: returns `undefined` over SSH pipe (correct behavior)
 
 **Issue 8d: `@opentui/core-openbsd-x64` module resolution from bun install cache (BLOCKING — NEW)**
 - Symptom: TUI enters CPU spin (R+ state) instead of rendering after isTTY fix
 - Root cause: `@opentui/core/index-vnvba6q9.js:10461` does `await import(\`@opentui/core-${process.platform}-${process.arch}/index.ts\`)`
-- The import resolves from bun install cache `<OLD_OPENBSD_WORKSPACE>/.bun/install/cache/@opentui/core@0.1.80@@@1/`, not project `node_modules/`
+- The import resolves from bun install cache `<legacy-workspace-root>/.bun/install/cache/@opentui/core@0.1.80@@@1/`, not project `node_modules/`
 - Bun's resolver can't find `@opentui/core-openbsd-x64` from the cache path
-- The fake package exists at `/srv/opencode-port/opencode/node_modules/@opentui/core-openbsd-x64/` but is unreachable
+- The fake package exists at `<workspace-root>/opencode/node_modules/@opentui/core-openbsd-x64/` but is unreachable
 - Failure cascade: opentui falls back to non-functional state → Worker socket disconnects → kqueue busy-polls dead sockets
 - **Next step**: Patch `index-vnvba6q9.js:10461` to use absolute path for OpenBSD
 
@@ -841,11 +841,11 @@ Verified working: `--help`, `models`, `serve`, `run "echo hi"` (LLM streaming + 
 - Built from source (anomalyco/opentui v0.1.79) using OpenBSD's packaged Zig 0.15.1
 - Modified build.zig: accepted Zig 0.15.1, added native fallback for unsupported platforms
 - Created fake `@opentui/core-openbsd-x64` package in node_modules with the built .so
-- Source: `/srv/opencode-port/opentui-zig/` on openbsd-host
+- Source: `<workspace-root>/opentui-zig/` on <openbsd-host>
 
 ### Comprehensive OpenCode Test Results (2026-02-19 session 7)
 
-**Test command**: `ssh -t openbsd-host '/srv/opencode-port/bun-new run --conditions=browser /srv/opencode-port/opencode/packages/opencode/src/index.ts'`
+**Test command**: `ssh -t <openbsd-host> '<workspace-root>/bun-new run --conditions=browser <workspace-root>/opencode/packages/opencode/src/index.ts'`
 
 | Subcommand | Status | Notes |
 |------------|--------|-------|
@@ -874,7 +874,7 @@ Verified working: `--help`, `models`, `serve`, `run "echo hi"` (LLM streaming + 
 | `@opentui/core` import | 173 function exports loaded |
 | `CliRenderer` | Available (typeof = function) |
 | `CliRenderEvents` | Available (typeof = object) |
-| `@opentui/core-openbsd-x64` path | `/srv/opencode-port/opencode/node_modules/@opentui/core-openbsd-x64/libopentui.so` |
+| `@opentui/core-openbsd-x64` path | `<workspace-root>/opencode/node_modules/@opentui/core-openbsd-x64/libopentui.so` |
 | `libopentui.so` ldd | Only depends on `libpthread.so.28.0` |
 | `Bun.which("rg")` | `/usr/local/bin/rg` (ripgrep 14.1.1) |
 | SQLite (bun:sqlite) | CREATE/INSERT/SELECT all work |
@@ -954,13 +954,13 @@ Files modified in `<MAC_WORKSPACE>/opencode-port/opentui-0.1.79/packages/core/`:
 - **No numeric f_type in OpenBSD statfs**: Return 0, OpenBSD has f_fstypename (string) instead
 - **Build runner whitespace issue**: `zig build obj` sometimes fails with "no step named ''". Workaround: invoke the build runner binary directly. Also do NOT use `-Z0000000000000000` flag.
 - **LLD 19 large .o bug**: LLD 19.1.7 on OpenBSD misreads e_shoff from 254MB .o files. GNU readelf and raw hex verify the file is correct. LLVM readelf reports wrong offset (560 bytes too high). GNU objcopy can strip debug sections but corrupts relocation types it doesn't know (type 42 = R_X86_64_REX_GOTPCRELX). Need a modern strip tool or to build without debug info.
-- **Disk space management**: Old VM /home (16G) was full. Migrated to openbsd-host with 97GB free.
+- **Disk space management**: Old VM /home (16G) was full. Migrated to <openbsd-host> with 97GB free.
 - **libuv required for NAPI**: Bun only officially links libuv on Windows, but the NAPI/V8 compatibility layer (`napi.zig`) references `uv_*` symbols on all platforms. Must build libuv from source on OpenBSD and link it.
 - **Duplicate `uv_tty_reset_mode`**: Both `wtf-bindings.cpp` and libuv define this. Use `--allow-multiple-definition`.
 - **Inspector agent stubs conflict with Zig**: When `ENABLE_REMOTE_INSPECTOR=0`, the `#else` branches compile stub `extern "C"` functions that duplicate symbols Zig provides. Must remove the 6 stubs (Enable/Disable/setEnabled) from C++ side.
 - **Bindgen v2 `Generated*.cpp` not compiled by cmake**: When using `BUN_CPP_ONLY` or `SKIP_CODEGEN`, the bindgen-generated C++ files aren't included in the cmake target list. Must compile them manually.
 - **`_NativeModule.h` location**: In `src/bun.js/modules/`, needed for `GeneratedSocketConfigHandlers.cpp`.
-- **Server migration**: Artifacts transferred from old VM via Mac SSH relay: jsc-build (205M), bun-vendor (290M), zig3+utilities. C++ .o files (7GB) rebuilt on openbsd-host with 8 cores.
+- **Server migration**: Artifacts transferred from old VM via Mac SSH relay: jsc-build (205M), bun-vendor (290M), zig3+utilities. C++ .o files (7GB) rebuilt on <openbsd-host> with 8 cores.
 
 ## Key File Locations
 
@@ -984,7 +984,7 @@ opentui-0.1.79/     # opentui source (anomalyco/opentui, for building libopentui
 CHANGELOG.md             # this file
 ```
 
-### openbsd-host (`/srv/opencode-port/`) — physical server 192.168.x.x (migrated from <OLD_OPENBSD_WORKSPACE> 2026-02-18)
+### <openbsd-host> (`<workspace-root>/`) — physical server <lan-ip> (migrated from <legacy-workspace-root> 2026-02-18)
 ```
 opencode/               # OpenCode v1.2.6 source (anomalyco/opencode, extracted from tarball)
   node_modules/@opentui/core-openbsd-x64/  # Manually created: libopentui.so + index.ts for OpenBSD TUI support
@@ -1006,7 +1006,7 @@ bun-build/              # Bun CMake build directory (symlinked from /usr/obj/bun
   bun-zig.o             # Cross-compiled zig object (242MB, copied from Mac NFS)
   libbun-profile.a      # C++ static library (6.5G, compiled with -fPIC)
   codegen/              # Local copy of codegen files (12 .lut.h files up to date)
-  boringssl/            # Built dependency libraries (all rebuilt on openbsd-host)
+  boringssl/            # Built dependency libraries (all rebuilt on <openbsd-host>)
   mimalloc/ zlib/ brotli/ cares/ highway/ libdeflate/ lshpack/
   libarchive/ hdrhistogram/ zstd/ sqlite/ tinycc/ lolhtml/
 bun-vendor/             # Downloaded dependency sources (symlinked from /usr/obj/bun-vendor)
@@ -1022,7 +1022,7 @@ V8Array_fixed.o         # Fixed V8 Array implementation (17MB)
 /tmp/v8_array_bridge.S  # Assembly source for trampoline
 ```
 
-### Disk Usage (openbsd-host /home: 65.6GB free of 96.9GB)
+### Disk Usage (<openbsd-host> /home: 65.6GB free of 96.9GB)
 
 ## Code Review Findings (2026-02-17)
 
@@ -1068,22 +1068,22 @@ V8Array_fixed.o         # Fixed V8 Array implementation (17MB)
 - Root cause: `c-bindings.cpp:498` — platform guard `#if OS(LINUX) || OS(DARWIN)` excluded OpenBSD from `Bun__isTTY()` function
 - Fix: Changed to `#if OS(LINUX) || OS(DARWIN) || OS(OPENBSD)` — one-line change
 - Verified: `process.stdin.isTTY` / `stdout.isTTY` / `stderr.isTTY` all return `true` on real TTY via tmux
-- Rebuild: Recompiled just `c-bindings.cpp` on openbsd-host (exact command from compile_commands.json), updated `libbun-profile.a` with `ar r`, stripped `bun-zig.o` with `strip_debug_sections.py` (254→38MB), relinked
+- Rebuild: Recompiled just `c-bindings.cpp` on <openbsd-host> (exact command from compile_commands.json), updated `libbun-profile.a` with `ar r`, stripped `bun-zig.o` with `strip_debug_sections.py` (254→38MB), relinked
 
 **10. `@opentui/core-openbsd-x64` module resolution from bun install cache (FIXED)**
 - Symptom: TUI enters CPU spin (R+ state) instead of rendering
 - Root cause: Bun's resolver can't find `@opentui/core-openbsd-x64` from the install cache path
 - Fix: Patched both copies to use absolute path for OpenBSD:
-  - `<OLD_OPENBSD_WORKSPACE>/.bun/install/cache/@opentui/core@0.1.80@@@1/index-vnvba6q9.js:10461`
-  - `/srv/opencode-port/opencode/node_modules/@opentui/core/index-zrvzvh6r.js:10323`
-- Change: `await import(...)` → `process.platform === "openbsd" ? await import("/srv/opencode-port/opencode/node_modules/@opentui/core-openbsd-x64/index.ts") : await import(...)`
+  - `<legacy-workspace-root>/.bun/install/cache/@opentui/core@0.1.80@@@1/index-vnvba6q9.js:10461`
+  - `<workspace-root>/opencode/node_modules/@opentui/core/index-zrvzvh6r.js:10323`
+- Change: `await import(...)` → `process.platform === "openbsd" ? await import("<workspace-root>/opencode/node_modules/@opentui/core-openbsd-x64/index.ts") : await import(...)`
 - Verified: `import("@opentui/core")` succeeds with all 173+ exports
 
 **11. TUI renders from source — MAJOR MILESTONE**
 - After patches 8a/8b/8c/10: **OpenCode TUI fully renders on OpenBSD** when run from source
 - Banner, input box ("Ask anything..."), model picker, ctrl+t/tab/ctrl+p shortcuts, tips, status bar all display
 - Process goes to **S+ state** (sleeping, correct) — no CPU spin
-- Command: `cd /srv/opencode-port/opencode/packages/opencode && /srv/opencode-port/bun run --conditions=browser src/index.ts`
+- Command: `cd <workspace-root>/opencode/packages/opencode && <workspace-root>/bun run --conditions=browser src/index.ts`
 
 ### Bugs Fixed Session 11 (2026-02-20)
 

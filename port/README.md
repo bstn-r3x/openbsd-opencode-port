@@ -4,6 +4,11 @@ This directory is the local packaging workspace for producing a portable OpenBSD
 
 ## Goal
 
+Placeholder conventions used in examples:
+- `<openbsd-opencode-port-repo>`: local checkout of this orchestration repo on your OpenBSD build host
+- `<opencode-repo>`: local checkout of the OpenCode fork/source repo
+- `<tmpdir>`: writable temporary/work directory with enough free space for Bun compile operations
+
 Produce a relocatable `.tgz` bundle that a user can:
 1. download
 2. verify (`sha256`)
@@ -148,8 +153,8 @@ User runtime data is not packaged into system directories; it remains in the use
 Tested on OpenBSD 7.8 with a locally built package file (example package name shown; your `<pkg-version>` may differ because `pkg_create` package versions are sanitized from the app `--version` string).
 
 ```sh
-# On the build host (example: bstn)
-cd /srv/opencode-port/publish/repos/openbsd-opencode-port
+# On the build host (example SSH alias)
+cd <openbsd-opencode-port-repo>
 ./port/scripts/pkg-stage.sh --force
 # Recommended package build path: inventory gate + package creation in one command
 ./port/scripts/pkg-pack.sh --inventory-gate --force
@@ -164,7 +169,7 @@ Optional visible compiled-binary tmux check on the build host (sterile, recommen
 ```sh
 # Leaves host ~/.local/share/opencode/auth.json and other XDG state unused
 TERM=xterm-256color tmux -u new-session -s opencode-build-visible \
-  'cd /srv/opencode-port/publish/repos/openbsd-opencode-port && ./port/scripts/run-sterile.sh -- /srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode'
+  'cd <openbsd-opencode-port-repo> && ./port/scripts/run-sterile.sh -- <workspace-root>/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode'
 # Detach with Ctrl-b d after confirming rendering/input
 ```
 
@@ -176,7 +181,7 @@ Copy the package to the test VM (use any method that preserves bytes, e.g. `scp`
 ```
 
 ```sh
-# On the test VM (example: openbsd-vm)
+# On the test VM (example VM alias)
 tmux kill-session -t opencode-pkg-visible 2>/dev/null || true
 pkill -f '/usr/local/bin/opencode|opencode-bin' 2>/dev/null || true
 
@@ -217,8 +222,8 @@ For the selected source-distfile porting direction, use the clean-clone filtered
 
 ```sh
 ./port/scripts/source-vendor-prep.sh \
-  --work-dir /srv/opencode-port/tmp/opencode-source-prep \
-  --archive-dir /srv/opencode-port/tmp/opencode-source-prep-artifacts \
+  --work-dir <tmpdir>/opencode-source-prep \
+  --archive-dir <tmpdir>/opencode-source-prep-artifacts \
   --force
 ```
 
@@ -231,7 +236,7 @@ Host prerequisites for that workflow (build host / maintainer machine):
 - `bun`
 - `node` + `node-gyp`
 - `python3` and `gmake`
-- a spacious `TMPDIR` (for example `/srv/opencode-port/tmp`)
+- a spacious `TMPDIR` (for example `<tmpdir>`)
 
 ## Relationship to official OpenBSD ports
 
