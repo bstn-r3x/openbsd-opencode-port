@@ -1,6 +1,8 @@
-# OpenCode on OpenBSD (Project Hub)
+# OpenCode on OpenBSD (perosnal project)
 
-This repository is the public hub for the OpenCode-on-OpenBSD effort.
+This repository is my project for running the OpenCode on OpenBSD.
+I started it for experiment with Claude and now continue with Codex. 
+It seems to work fine so far and I will try to continue to polish it when I have some spare time.
 
 It contains:
 - release and status docs
@@ -13,7 +15,7 @@ It does not contain full Bun/OpenCode source history or official OpenBSD package
 
 - Portable OpenBSD bundle (`.tgz`): available via GitHub Releases
 - Local OpenBSD package (`pkg_add -D unsigned ./...tgz`): validated for maintainer testing
-- Official OpenBSD `pkg_add opencode`: not available yet (port not upstreamed)
+- Official OpenBSD `pkg_add opencode`: not available (port not upstreamed)
 
 ## For Users (Run OpenCode on OpenBSD Today)
 
