@@ -22,7 +22,10 @@ HOMEPAGE =	https://github.com/bstn-r3x/opencode-openbsd
 # Current blockers for the source-distfile path:
 # - no `lang/bun` port in the base OpenBSD ports tree (build dependency gap)
 # - no ports module/integration for Bun workspace dependency resolution
-# - naive vendoring is too large (measured on bstn: monorepo node_modules ~3.8G)
+# - OpenBSD build host needs node/node-gyp + python3 + gmake for dependency install scripts
+# - Bun compile needs a spacious TMPDIR (ENOSPC observed on small /tmp)
+# - upstream @opentui/core lacks an OpenBSD optional package; OpenCode fork vendors core-openbsd-x64 payload
+# - naive vendoring is too large (measured on bstn: monorepo node_modules ~3.8G; filtered workspace install reduced to ~516M)
 #
 # This port stays in a local-bootstrap mode for now to validate install layout and
 # package behavior through bsd.port.mk while the source-distfile strategy is refined.

@@ -25,3 +25,10 @@ Scripts:
 - `pkg-pack.sh` — build a real local OpenBSD package (`.tgz`) from the staged package image (recommended: `--inventory-gate`)
 - `pkg-sanitize-binary.sh` — legacy fallback for older binaries: sanitize embedded private path prefixes without `strip`
 - `run-sterile.sh` — run OpenCode (or any command) with isolated HOME/XDG state so local auth/session data is not used
+- `source-vendor-prep.sh` — prepare a clean-clone OpenCode source workspace with filtered Bun deps (and optional source/vendor tarballs) for source-distfile ports experiments
+
+
+OpenBSD source-distfile prep notes:
+- `source-vendor-prep.sh` validates a clean-clone filtered Bun install/build workflow for Option 1 (source-distfile) ports work.
+- It requires `node`, `node-gyp`, `python3`, and `gmake` in `PATH` for dependency install scripts.
+- Use a spacious `TMPDIR` (for example `/srv/opencode-port/tmp`) to avoid Bun compile `ENOSPC` failures on small `/tmp`.

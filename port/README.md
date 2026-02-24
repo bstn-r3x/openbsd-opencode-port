@@ -197,6 +197,28 @@ Notes:
 - The package file name may differ from the app version string because `pkg_create` enforces package-name formatting.
 - If you intentionally want to test your logged-in provider account/session behavior, do not use the sterile wrappers.
 
+## Source-Distfile Prep (Option 1, maintainer prototype)
+
+For the selected source-distfile porting direction, use the clean-clone filtered dependency prep workflow to produce maintainable source/dependency artifacts for ports experiments:
+
+```sh
+./port/scripts/source-vendor-prep.sh \
+  --work-dir /srv/opencode-port/tmp/opencode-source-prep \
+  --archive-dir /srv/opencode-port/tmp/opencode-source-prep-artifacts \
+  --force
+```
+
+This validates:
+- clean-clone `bun install --frozen-lockfile --filter=./packages/opencode`
+- OpenBSD build smoke via `script/build.ts --single --skip-install`
+- optional source tarball + filtered dependency payload tarball generation
+
+Host prerequisites for that workflow (build host / maintainer machine):
+- `bun`
+- `node` + `node-gyp`
+- `python3` and `gmake`
+- a spacious `TMPDIR` (for example `/srv/opencode-port/tmp`)
+
 ## Relationship to official OpenBSD ports
 
 This `port/` workspace is for portable bundle packaging and local packaging experiments.

@@ -16,3 +16,10 @@ Current status:
 Ports workspace setup on bstn (needed to run `make package` as a normal user):
 - `/usr/ports` installed from official OpenBSD 7.8 `ports.tar.gz` (verified with `signify`)
 - writable work dirs created: `/usr/ports/pobj`, `/usr/ports/distfiles`, `/usr/ports/packages`, `/usr/ports/plist`
+
+
+Validated source-distfile prep findings (bstn):
+- clean-clone filtered install works with `bun install --frozen-lockfile --filter=./packages/opencode`
+- filtered dependency payload measured ~516M (`node_modules/.bun`) instead of ~3.8G naive monorepo store
+- build smoke works with `packages/opencode/script/build.ts --single --skip-install` when `TMPDIR` has space (use `/srv/opencode-port/tmp`)
+- build host also needs `node`/`node-gyp`, `python3`, and `gmake` for dependency install scripts
