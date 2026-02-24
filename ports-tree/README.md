@@ -1,25 +1,15 @@
 # Ports Tree Skeletons
 
-This directory holds OpenBSD ports-style skeletons that mirror the layout used in
-`/usr/ports` (for example `misc/opencode/`).
+This directory stores OpenBSD ports-style skeleton files (for example `misc/opencode/`) that can be copied into a real `/usr/ports` checkout.
 
-Why this is here:
-- this repo can track ports-style files even when a host does not have `/usr/ports` installed
-- we still want to start and track real ports-tree metadata files (`Makefile`, `pkg/*`, `distinfo`)
-- these files are intended to be copied into a real ports checkout for framework integration work
+## Purpose
 
-Current status:
-- `misc/opencode/` is a local-bootstrap ports-framework stub (install layout + pkg metadata validated)
-- it still needs a real distfile/source build strategy before upstream submission
+- track ports metadata in git before the official port exists
+- iterate on `Makefile`, `pkg/*`, and `distinfo` structure
+- validate the packaging layout separately from local bundle workflows
 
+## Current State
 
-Ports workspace setup on a maintainer OpenBSD host (needed to run `make package` as a normal user):
-- `/usr/ports` installed from official OpenBSD 7.8 `ports.tar.gz` (verified with `signify`)
-- writable work dirs created: `/usr/ports/pobj`, `/usr/ports/distfiles`, `/usr/ports/packages`, `/usr/ports/plist`
-
-
-Validated source-distfile prep findings (on a maintainer OpenBSD host):
-- clean-clone filtered install works with `bun install --frozen-lockfile --filter=./packages/opencode`
-- filtered dependency payload measured ~516M (`node_modules/.bun`) instead of ~3.8G naive monorepo store
-- build smoke works with `packages/opencode/script/build.ts --single --skip-install` when `TMPDIR` has space (use a spacious build TMPDIR, for example `<tmpdir>`)
-- build host also needs `node`/`node-gyp`, `python3`, and `gmake` for dependency install scripts
+- `misc/opencode/` is a ports-framework bootstrap stub
+- install layout and package metadata were validated locally
+- a real source-distfile build strategy is still required before upstream submission
