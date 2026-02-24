@@ -25,6 +25,30 @@ It is **not** an installable package repository and does **not** contain full so
 - **[Contributing Guide: `CONTRIBUTE.md`](CONTRIBUTE.md)**
 - **[Engineering History / Changelog: `CHANGELOG.md`](CHANGELOG.md)**
 
+## End-User Quick Start (Portable Bundle)
+
+If you want to **run OpenCode on OpenBSD today** (before official `pkg_add opencode` exists), download the **portable release bundle** from the repo's GitHub Releases page.
+
+Important: do **not** use GitHub's default "Source code (tar.gz)" asset for this. That is source code only and requires build tooling.
+
+What to download from Releases:
+- `opencode-openbsd-amd64-<version>.tgz` (portable bundle, extract-and-run)
+- `opencode-openbsd-amd64-<version>.tgz.sha256` (checksum)
+
+Basic usage:
+
+```sh
+sha256 -C opencode-openbsd-amd64-<version>.tgz.sha256 || sha256 opencode-openbsd-amd64-<version>.tgz
+mkdir -p ~/.local
+tar -xzf opencode-openbsd-amd64-<version>.tgz -C ~/.local
+~/.local/opencode-openbsd/bin/opencode
+```
+
+Notes:
+- This is a **portable bundle** `.tgz`, not a `pkg_add` package.
+- A local OpenBSD package `.tgz` exists for maintainer testing (`pkg_add -D unsigned`), but official `pkg_add opencode` is not available yet.
+- See [`port/README.md`](port/README.md) for bundle and local package details.
+
 ## Related Repositories
 
 This project is split into three repos:
@@ -42,7 +66,7 @@ This project is split into three repos:
 
 This project is **not yet** a normal end-user install path.
 
-- A portable `.tgz` bundle workflow is being prepared in [`port/README.md`](port/README.md) for pre-`pkg_add` distribution
+- A portable `.tgz` bundle (extract-and-run) is the current pre-`pkg_add` end-user path; see the quick-start below and [`port/README.md`](port/README.md)
 - There is no official OpenBSD package in ports yet
 - `pkg_add` does not work from official OpenBSD mirrors because the port is not accepted upstream
 - Maintainer-only local package tests via `pkg_add -D unsigned ./opencode-<pkg-version>.tgz` are documented in [`port/README.md`](port/README.md), including sterile tmux test commands that avoid reusing host auth state

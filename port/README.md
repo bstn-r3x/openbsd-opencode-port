@@ -42,11 +42,25 @@ Not tracked:
 - checksums/signatures generated per release
 - staged binaries/runtime payloads
 
+## Downloading The Right .tgz (for users)
+
+There are multiple `.tgz` files in this project context. Use the right one:
+
+- **Portable bundle `.tgz`** (`opencode-openbsd-amd64-<version>.tgz`)
+  Extract anywhere and run `bin/opencode`. This is the current end-user path.
+- **Local OpenBSD package `.tgz`** (`opencode-<pkg-version>.tgz`)
+  Maintainer/test artifact for `pkg_add -D unsigned` on OpenBSD.
+- **GitHub source archive** (`Source code (tar.gz)`)
+  Source only, not runnable by itself. Requires build tooling.
+
+For end users, download the portable bundle and checksum from the GitHub Releases page for this repo.
+
 ## Expected end-user workflow (portable bundle)
 
 ```sh
 # user downloads release files
-sha256 -C opencode-openbsd-amd64-<version>.tgz.sha256
+sha256 -C opencode-openbsd-amd64-<version>.tgz.sha256  # if your sha256 supports -C checklist mode
+# or compare manually: sha256 opencode-openbsd-amd64-<version>.tgz
 mkdir -p ~/.local
 tar -xzf opencode-openbsd-amd64-<version>.tgz -C ~/.local
 ~/.local/opencode-openbsd/bin/opencode
