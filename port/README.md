@@ -125,7 +125,7 @@ User runtime data is not packaged into system directories; it remains in the use
 
 # Build a real local OpenBSD package for pkg_add under port/pkg-stage/packages/
 ./port/scripts/pkg-pack.sh --force
-# Optional strict pre-package gate (currently expected to fail until private build paths are removed from the binary payload)
+# Optional strict pre-package gate (recommended; builds package and fails on private path leaks)
 ./port/scripts/pkg-pack.sh --inventory-gate --force
 ```
 
@@ -137,9 +137,10 @@ Tested on OpenBSD 7.8 with a locally built package file (example package name sh
 # On the build host (example: bstn)
 cd /srv/opencode-port/publish/repos/openbsd-opencode-port
 ./port/scripts/pkg-stage.sh --force
-# Optional strict preflight gate (fails if private workspace paths are embedded in the staged binary)
+# Recommended package build path: inventory gate + package creation in one command
 ./port/scripts/pkg-pack.sh --inventory-gate --force
-./port/scripts/pkg-pack.sh --force
+# Alternative (skip gate, still builds package)
+# ./port/scripts/pkg-pack.sh --force
 ls -lh port/pkg-stage/packages/*.tgz
 sha256 port/pkg-stage/packages/*.tgz
 ```
@@ -189,6 +190,8 @@ opencode --version
 
 Notes:
 - Do not use `strip` as a quick path-leak workaround on the Bun-packaged OpenCode binary; it removes the appended app payload and `opencode --version` falls back to the Bun runtime version.
+- Current recommended fix: build from OpenCode source with the source-level path sanitization in `packages/opencode/script/build.ts`, then run `pkg-pack.sh --inventory-gate`.
+- `pkg-pack.sh --sanitize-private-paths` / `pkg-sanitize-binary.sh` are legacy fallback tools for older binaries that do not yet include the source-level build sanitization.
 - `pkg_add` rejects unsigned local packages by default; use `-D unsigned` for this local test workflow.
 - `pkg_delete` uses the installed package name/stem (`opencode`).
 - The package file name may differ from the app version string because `pkg_create` enforces package-name formatting.

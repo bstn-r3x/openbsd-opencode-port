@@ -18,6 +18,8 @@ Options:
   --comment TEXT      Package COMMENT field (default: OpenCode local package for OpenBSD)
   --fullpkgpath PATH  Package FULLPKGPATH metadata (default: misc/opencode)
   --desc PATH         Use description text from file instead of generated text
+  --sanitize-private-paths
+                     Legacy fallback: sanitize staged binary private paths before packaging
   --inventory-check   Run pkg-inventory.sh on the staged binary before pkg_create (report only)
   --inventory-gate    Run pkg-inventory.sh --fail-on-private-path before pkg_create (fails on leak)
   --inventory-output PATH
@@ -46,6 +48,7 @@ VERSION=""
 COMMENT="OpenCode local package for OpenBSD"
 FULLPKGPATH="misc/opencode"
 DESC_PATH=""
+SANITIZE_PRIVATE_PATHS=0
 INVENTORY_MODE=""
 INVENTORY_OUTPUT=""
 FORCE=0
@@ -102,6 +105,10 @@ while [ $# -gt 0 ]; do
       DESC_PATH=$2
       shift 2
       ;;
+    --sanitize-private-paths)
+      SANITIZE_PRIVATE_PATHS=1
+      shift
+      ;;
     --inventory-check)
       INVENTORY_MODE=check
       shift
@@ -145,6 +152,13 @@ DOC_TROUBLE="$IMAGE_ROOT/$PREFIX_REL/share/doc/$DOC_NAME/TROUBLESHOOTING.txt"
 [ -x "$BIN_PATH" ] || die "staged binary not found: $BIN_PATH"
 [ -f "$DOC_README" ] || die "staged doc not found: $DOC_README"
 [ -f "$DOC_TROUBLE" ] || die "staged doc not found: $DOC_TROUBLE"
+
+if [ "$SANITIZE_PRIVATE_PATHS" -eq 1 ]; then
+  SANITIZE_SCRIPT="$SCRIPT_DIR/pkg-sanitize-binary.sh"
+  [ -x "$SANITIZE_SCRIPT" ] || die "sanitize script not executable: $SANITIZE_SCRIPT"
+  echo "Running legacy binary sanitization fallback on staged binary..."
+  "$SANITIZE_SCRIPT" --bin "$BIN_PATH"
+fi
 
 if [ -n "$INVENTORY_MODE" ]; then
   INVENTORY_SCRIPT="$SCRIPT_DIR/pkg-inventory.sh"

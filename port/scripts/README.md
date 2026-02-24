@@ -11,7 +11,7 @@ Security note (important for tests):
 Process stage they cover:
 1. Build and verify OpenCode on OpenBSD using the normal porting workflow.
 2. Portable bundle: `stage.sh` -> `pack.sh` -> `test.sh` (or `release-local.sh`).
-3. Local package groundwork: `pkg-inventory.sh` -> `pkg-stage.sh` -> `pkg-pack.sh`.
+3. Local package groundwork: `pkg-inventory.sh` -> `pkg-stage.sh` -> `pkg-pack.sh --inventory-gate` (recommended).
 4. Install-test local package with `pkg_add -D unsigned` on a test VM.
 5. Run visible TUI checks in tmux using sterile state.
 
@@ -22,5 +22,6 @@ Scripts:
 - `release-local.sh` — convenience wrapper that runs stage -> pack -> test
 - `pkg-inventory.sh` — collect runtime dependency/portability inventory for the compiled binary (supports gating via `--forbid-pattern` and `--fail-on-private-path`)
 - `pkg-stage.sh` — stage a local package image using standard /usr/local OpenBSD install paths
-- `pkg-pack.sh` — build a real local OpenBSD package (`.tgz`) from the staged package image (optional `--inventory-check` / `--inventory-gate` preflight)
+- `pkg-pack.sh` — build a real local OpenBSD package (`.tgz`) from the staged package image (recommended: `--inventory-gate`)
+- `pkg-sanitize-binary.sh` — legacy fallback for older binaries: sanitize embedded private path prefixes without `strip`
 - `run-sterile.sh` — run OpenCode (or any command) with isolated HOME/XDG state so local auth/session data is not used
