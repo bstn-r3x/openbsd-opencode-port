@@ -212,6 +212,8 @@ bin/opencode
 libexec/opencode/opencode-bin
 share/doc/$DOC_NAME/README.txt
 share/doc/$DOC_NAME/TROUBLESHOOTING.txt
+share/doc/$DOC_NAME/LICENSE.txt
+share/doc/$DOC_NAME/THIRD-PARTY-NOTICES.txt
 EOF_PLIST
 
 if [ -n "$DESC_PATH" ]; then
@@ -233,6 +235,8 @@ Installed files:
 - $PREFIX/libexec/opencode/opencode-bin
 - $PREFIX/share/doc/$DOC_NAME/README.txt
 - $PREFIX/share/doc/$DOC_NAME/TROUBLESHOOTING.txt
+- $PREFIX/share/doc/$DOC_NAME/LICENSE.txt
+- $PREFIX/share/doc/$DOC_NAME/THIRD-PARTY-NOTICES.txt
 EOF_DESC
   DESC_TO_USE=$GEN_DESC_PATH
 fi

@@ -9,7 +9,7 @@ Assemble a portable bundle staging tree under port/stage/.
 
 Options:
   --bin PATH         Compiled OpenCode binary to package
-                     (default: /srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode)
+                     (default: auto-detect common OpenCode build output paths)
   --stage-dir PATH   Staging directory (default: <repo>/port/stage/opencode-openbsd)
   --name NAME        Bundle root directory name inside stage (default: opencode-openbsd)
   --version VERSION  Override version (default: detect from binary --version)
@@ -27,8 +27,7 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PORT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$PORT_DIR/.." && pwd)
 
-DEFAULT_BIN="/srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"
-BIN_PATH="$DEFAULT_BIN"
+BIN_PATH=""
 BUNDLE_NAME="opencode-openbsd"
 STAGE_BASE="$PORT_DIR/stage"
 STAGE_DIR=""
@@ -70,6 +69,16 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+if [ -z "$BIN_PATH" ]; then
+  for candidate in     "$REPO_ROOT/../opencode-openbsd/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"     "$REPO_ROOT/../opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"     "/srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"
+  do
+    if [ -x "$candidate" ]; then
+      BIN_PATH=$candidate
+      break
+    fi
+  done
+fi
 
 if [ -z "$STAGE_DIR" ]; then
   STAGE_DIR="$STAGE_BASE/$BUNDLE_NAME"
@@ -146,9 +155,9 @@ DOC
 cat > "$STAGE_DIR/share/doc/opencode-openbsd/BUNDLE-METADATA.txt" <<DOC
 name=$BUNDLE_NAME
 version=$VERSION
-binary_source=$BIN_PATH
+format=portable-bundle
+metadata_format=1
 staged_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-host=$(hostname)
 DOC
 
 echo "Staged portable bundle tree: $STAGE_DIR"

@@ -10,7 +10,7 @@ This prepares files under a package image root for a later pkg_create step.
 
 Options:
   --bin PATH         Compiled OpenCode binary to package
-                     (default: /srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode)
+                     (default: auto-detect common OpenCode build output paths)
   --root PATH        Package image root (default: <repo>/port/pkg-stage/image)
   --prefix PATH      Install prefix inside package (default: /usr/local)
   --doc-name NAME    Doc dir name under share/doc (default: opencode)
@@ -29,7 +29,7 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PORT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 REPO_ROOT=$(CDPATH= cd -- "$PORT_DIR/.." && pwd)
 
-BIN_PATH="/srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"
+BIN_PATH=""
 IMAGE_ROOT="$PORT_DIR/pkg-stage/image"
 PREFIX="/usr/local"
 DOC_NAME="opencode"
@@ -76,6 +76,16 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+if [ -z "$BIN_PATH" ]; then
+  for candidate in     "$REPO_ROOT/../opencode-openbsd/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"     "$REPO_ROOT/../opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"     "/srv/opencode-port/opencode/packages/opencode/dist/opencode-openbsd-x64/bin/opencode"
+  do
+    if [ -x "$candidate" ]; then
+      BIN_PATH=$candidate
+      break
+    fi
+  done
+fi
 
 case "$PREFIX" in
   /usr/local|/usr/local/*) : ;;
@@ -158,9 +168,8 @@ version=$VERSION
 wrapper=$PREFIX/bin/opencode
 binary=$PREFIX/libexec/opencode/opencode-bin
 docdir=$PREFIX/share/doc/$DOC_NAME
-binary_source=$BIN_PATH
+metadata_format=1
 staged_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-host=$(hostname)
 EOF_META
 
 cat > "$META_DIR/PLIST.candidate" <<EOF_PLIST
