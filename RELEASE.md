@@ -7,36 +7,56 @@ Canonical status summary for the OpenCode-on-OpenBSD project.
 Working today:
 - OpenCode runs on OpenBSD (source mode and compiled mode)
 - Portable bundle release (opencode-openbsd-amd64-*.tgz)
-- Local package validation via pkg_add -D unsigned ./opencode-*.tgz
+- Local package validation via `pkg_add -D unsigned ./opencode-*.tgz`
 
 Not available yet:
-- Official OpenBSD ports-tree package (pkg_add opencode from mirrors)
+- Official OpenBSD ports-tree package (`pkg_add opencode` from mirrors)
 
 ## Current Known Gaps (Project-Level)
 
 - Official ports-tree port implementation is incomplete (source-distfile/build metadata still in progress)
-- Bun/OpenBSD runtime patch set still has unresolved correctness risk (poll/ppoll syscall dispatch audit/fix)
-- Bun/OpenBSD getFdPath workaround debt remains (error semantics + process-cwd mutation workaround)
+- Bun/OpenBSD `getFdPath` still relies on an OpenBSD directory-FD fallback that swaps process cwd (`fchdir + getcwd + restore`)
 - OpenBSD/tmux ANSI logo rendering is still imperfect (plaintext fallback used in tmux-safe mode)
-- Local packaging/orchestration scripts still need metadata cleanliness cleanup (no host/path leaks in shipped bundle metadata)
+- Source-distfile/offline dependency workflow for the final ports build path is not fully wired into `/usr/ports/misc/opencode`
 
 ## Immediate Priorities
 
-1. Fix Bun/OpenBSD poll / ppoll dispatch and validate on OpenBSD.
-2. Harden Bun/OpenBSD getFdPath behavior (preserve errors, reduce workaround blast radius).
-3. Align OpenCode source build workflow with clean-clone reproducible requirements.
-4. Finish local packaging script cleanup while continuing source-distfile ports work.
+1. Keep reducing Bun/OpenBSD `getFdPath` fallback usage via path propagation (avoid reverse-resolving regular file FD paths).
+2. Add/maintain Bun OpenBSD fd-path regression smokes in the maintainer validation workflow.
+3. Continue source-distfile ports work (offline dependency provisioning + ports-framework build/install path).
+4. Finish remaining runtime/polish issues (OpenBSD tmux ANSI logo rendering, patch debt reduction).
+
+## Bun/OpenBSD fd-path Hardening Strategy (Current Plan)
+
+Goal: make OpenBSD behavior robust without relying on process-global cwd mutation except as a last-resort directory-FD fallback.
+
+### Phase 1: Safety + Regression Coverage (done/in progress)
+- Preserve OpenBSD `getFdPath` errno semantics (no blanket `FileNotFound` collapse).
+- Avoid `getFdPath()` on known regular-file FD callsites in installer and user-facing paths.
+- Serialize the OpenBSD cwd-swapping fallback with a process-global mutex (risk reduction).
+- Maintain command-level regression smokes (`run`, lockfile migrations, standalone compile, fd-based `Bun.write`).
+
+### Phase 2: Preferred Architecture (next)
+- Continue replacing reverse FD-path lookups with explicit path propagation.
+- Introduce small helpers/patterns for “open file + keep path” flows.
+- Treat `getFdPath()` on OpenBSD as directory-FD-only / last resort in code review.
+
+### Phase 3: Core Cleanup (longer-term)
+- Document/enforce OpenBSD `getFdPath` contract more explicitly.
+- Investigate any viable non-cwd-mutating directory-FD path strategy on OpenBSD (if one exists).
+- If none exists, keep shrinking fallback usage until it is rare and well-contained.
 
 ## Readiness Criteria (for public/maintainer releases)
 
 - Reproducible documented build path
 - Baseline validation passes on OpenBSD
+- Bun OpenBSD fd-path smokes pass on OpenBSD
 - Visible tmux TUI smoke test passes
 - Documentation matches current workflows and artifacts
 
 ## Source of Truth
 
-- Current workflow docs: README.md, port/README.md, CONTRIBUTE.md
-- Detailed build procedures: OPENCODE-PORT-BUILD-GUIDE.md
-- Current incremental changes: CHANGELOG.md
-- Historical engineering log: HISTORY.md
+- Current workflow docs: `README.md`, `port/README.md`, `CONTRIBUTE.md`
+- Detailed build procedures: `OPENCODE-PORT-BUILD-GUIDE.md`
+- Current incremental changes: `CHANGELOG.md`
+- Historical engineering log: `HISTORY.md`
