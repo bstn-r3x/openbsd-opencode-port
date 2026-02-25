@@ -32,6 +32,7 @@ check() {
 
   section "${name}"
   local output
+  local rc=0
   if output="$(run_with_timeout "${CHECK_TIMEOUT}" "$@" 2>&1)"; then
     echo "Status: PASS"
     echo
@@ -39,9 +40,10 @@ check() {
     echo "${output}"
     echo '```'
     return 0
+  else
+    rc=$?
   fi
 
-  local rc=$?
   echo "Status: FAIL (exit ${rc})"
   echo
   echo '```text'
@@ -129,6 +131,12 @@ run_check() {
 
   run_check "Bun install smoke" \
     ssh "${SSH_OPTS[@]}" "${HOST}" "set -e; d=\$(mktemp -d /tmp/bun-install-smoke.XXXXXX); cd \"\$d\"; printf '{\"name\":\"smoke\",\"version\":\"1.0.0\",\"dependencies\":{\"left-pad\":\"1.3.0\"}}\n' > package.json; ${REMOTE_ROOT}/bun install >/tmp/bun-install-smoke.log 2>&1; test -d node_modules/left-pad && echo install-ok:\$d"
+
+  run_check "Bun npm lockfile migration smoke" \
+    ssh "${SSH_OPTS[@]}" "${HOST}" "set -e; d=\$(mktemp -d /tmp/bun-npm-migrate-smoke.XXXXXX); cd \"\$d\"; printf '{\"name\":\"smoke\",\"version\":\"1.0.0\"}\n' > package.json; printf '{\"name\":\"smoke\",\"version\":\"1.0.0\",\"lockfileVersion\":3,\"requires\":true,\"packages\":{\"\":{\"name\":\"smoke\",\"version\":\"1.0.0\"}}}\n' > package-lock.json; ${REMOTE_ROOT}/bun install >/tmp/bun-npm-migrate-smoke.log 2>&1; echo npm-migrate-ok:\$d"
+
+  run_check "Bun yarn lockfile migration smoke" \
+    ssh "${SSH_OPTS[@]}" "${HOST}" "set -e; d=\$(mktemp -d /tmp/bun-yarn-migrate-smoke.XXXXXX); cd \"\$d\"; printf '{\"name\":\"smoke\",\"version\":\"1.0.0\"}\n' > package.json; printf '# yarn lockfile v1\n' > yarn.lock; ${REMOTE_ROOT}/bun install >/tmp/bun-yarn-migrate-smoke.log 2>&1; echo yarn-migrate-ok:\$d"
 
   run_check "OpenCode source help" \
     ssh "${SSH_OPTS[@]}" "${HOST}" "cd ${REMOTE_ROOT}/opencode/packages/opencode && ${REMOTE_ROOT}/bun run --conditions=browser src/index.ts --help | head -n 40"
