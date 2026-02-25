@@ -41,7 +41,8 @@ Start here:
 2. `port/README.md` (portable bundle + local package workflows)
 3. `OPENCODE-PORT-BUILD-GUIDE.md` (detailed multi-host build guide)
 4. `CONTRIBUTE.md` (branching, validation, publishing)
-5. `CHANGELOG.md` (engineering history)
+5. `CHANGELOG.md` (current changes)
+6. `HISTORY.md` (historical engineering log)
 
 ## Repositories
 

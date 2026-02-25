@@ -13,3 +13,4 @@ This directory stores OpenBSD ports-style skeleton files (for example `misc/open
 - `misc/opencode/` is a ports-framework bootstrap stub
 - install layout and package metadata were validated locally
 - a real source-distfile build strategy is still required before upstream submission
+- remaining build blockers include Bun build dependencies, offline dependency provisioning, and source completeness for clean-clone builds
