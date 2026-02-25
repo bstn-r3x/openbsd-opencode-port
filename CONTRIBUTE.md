@@ -18,6 +18,7 @@ Keep cross-repo changes split into reviewable commits.
 1. Read `RELEASE.md` for current status and blockers.
 2. Run baseline checks:
    - `./scripts/test/run-openbsd-baseline.sh <your-openbsd-host>`
+   - `./scripts/test/run-openbsd-bun-fdpath-smokes.sh <your-openbsd-host>` (Bun OpenBSD fd-path regression smokes)
 3. Run visible TUI checks when UI/input/rendering is affected:
    - `./scripts/test/run-visible-tui-tests.sh <your-openbsd-host>`
 4. Update docs when behavior or commands change.
