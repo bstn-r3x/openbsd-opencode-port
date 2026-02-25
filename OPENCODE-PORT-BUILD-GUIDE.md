@@ -146,63 +146,23 @@ Note: the file is renamed to `bun-zig.o` on <openbsd-host> (the link command ref
 **Critical: `bun-zig.o` must NOT be inside `libbun-profile.a`.** If it is (from a previous `ar r` step), remove it first:
 
 ```bash
-ssh <openbsd-host> "cd <workspace-root>/bun-build && ar t libbun-profile.a | grep bun-zig && ar d libbun-profile.a bun-zig.o || echo 'not in archive'"
+ssh <openbsd-host> "cd <workspace-root>/bun-build && ar t libbun-profile.a | grep bun-zig && ar d libbun-profile.a bun-zig.o || echo 'not in archive'" 
 ```
 
-Then link:
+Use the relink helper (maintained path):
 
 ```bash
-ssh <openbsd-host> 'clang++ -o <workspace-root>/bun \
-  -Wl,--strip-debug \
-  <workspace-root>/bun-build/bun-zig.o \
-  <workspace-root>/openbsd_stubs_c.o \
-  <workspace-root>/openbsd_stubs_cpp.o \
-  <workspace-root>/GeneratedFakeTimersConfig.o \
-  <workspace-root>/GeneratedSSLConfig.o \
-  <workspace-root>/GeneratedSocketConfig.o \
-  <workspace-root>/GeneratedSocketConfigBinaryType.o \
-  <workspace-root>/GeneratedSocketConfigHandlers.o \
-  <workspace-root>/v8_array_bridge.o \
-  -Wl,--whole-archive <workspace-root>/bun-build/libbun-profile.a -Wl,--no-whole-archive \
-  <workspace-root>/jsc-build/lib/libJavaScriptCore.a \
-  <workspace-root>/jsc-build/lib/libWTF.a \
-  <workspace-root>/jsc-build/lib/libbmalloc.a \
-  <workspace-root>/libuv-build/libuv.a \
-  <workspace-root>/bun-build/boringssl/libcrypto.a \
-  <workspace-root>/bun-build/boringssl/libssl.a \
-  <workspace-root>/bun-build/boringssl/libdecrepit.a \
-  <workspace-root>/bun-build/mimalloc/libmimalloc.a \
-  <workspace-root>/bun-build/zlib/libz.a \
-  <workspace-root>/bun-build/brotli/libbrotlicommon.a \
-  <workspace-root>/bun-build/brotli/libbrotlidec.a \
-  <workspace-root>/bun-build/brotli/libbrotlienc.a \
-  <workspace-root>/bun-build/cares/lib/libcares.a \
-  <workspace-root>/bun-build/highway/libhwy.a \
-  <workspace-root>/bun-build/libdeflate/libdeflate.a \
-  <workspace-root>/bun-build/lshpack/libls-hpack.a \
-  <workspace-root>/bun-build/libarchive/libarchive/libarchive.a \
-  <workspace-root>/bun-build/hdrhistogram/src/libhdr_histogram_static.a \
-  <workspace-root>/bun-build/zstd/lib/libzstd.a \
-  <workspace-root>/bun-build/sqlite/libsqlite3.a \
-  <workspace-root>/bun-build/tinycc/libtcc.a \
-  <workspace-root>/bun-build/lolhtml/release/liblolhtml.a \
-  /usr/local/lib/libicudata.a \
-  /usr/local/lib/libicui18n.a \
-  /usr/local/lib/libicuuc.a \
-  -lc -lpthread -lm -lc++ -lkvm \
-  -fno-exceptions -fno-rtti -Wl,--allow-multiple-definition'
+ssh <openbsd-host> '  <workspace-root>/openbsd-opencode-port/scripts/build/relink-bun-openbsd.sh \
+    --build-dir <workspace-root>/bun-build \
+    --bun-obj <workspace-root>/bun-build/bun-zig.o \
+    --output-bin <workspace-root>/bun'
 ```
 
-**Takes ~2 minutes.** Output: `<workspace-root>/bun` (~91MB PIE ELF).
-
-#### Why this link order matters
-
-1. **`bun-zig.o` first, separate from `libbun-profile.a`** — avoids duplicate `stat64` symbols. The archive already contains C++ objects that define `stat64` wrappers; having `bun-zig.o` inside the archive creates conflicts.
-2. **`--whole-archive` around `libbun-profile.a`** — forces all C++ objects to be included (many are only referenced via Zig's extern declarations, which the linker can't resolve from archive metadata).
-3. **`v8_array_bridge.o`** — provides assembly trampoline for `v8::Array::New`. Zig emits a symbol expecting `std::function` (libstdc++ mangling: `St8function`) but libc++ provides `std::__1::function` (mangling: `NSt3__18function`). The trampoline bridges them.
-4. **`--allow-multiple-definition`** — handles remaining duplicate symbols (e.g., `uv_tty_reset_mode` defined in both libuv and Bun's usockets).
-5. **Static ICU** (`/usr/local/lib/libicu*.a`) — avoids runtime dependency on ICU shared libs.
-6. **`-lkvm`** — OpenBSD-specific, needed for process introspection.
+This helper handles:
+- stripping debug sections from the relink object copy
+- setting the ELF OS/ABI byte to OpenBSD (`ELFOSABI_OPENBSD`)
+- injecting the OpenBSD V8 trampoline object (instead of symbol-rewriting `bun-zig.o`)
+- relinking `bun-profile` and copying the final binary to the requested output path
 
 ### Stage 5: Test
 
