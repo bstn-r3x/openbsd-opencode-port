@@ -118,6 +118,20 @@ run_check() {
   run_check "Bun run file-path smoke" \
     ssh "${SSH_OPTS[@]}" "${HOST}" "set -e; d=\$(mktemp -d /tmp/bun-run-file-smoke.XXXXXX); mkdir -p \"\$d/sub\"; printf 'console.log(\\\"run-file-ok\\\")\\n' > \"\$d/sub/hello.js\"; cd \"\$d\"; ${REMOTE_ROOT}/bun run ./sub/hello.js"
 
+
+  run_check "Bun copy_file fd smoke" \
+    ssh "${SSH_OPTS[@]}" "${HOST}" "set -e; d=\$(mktemp -d /tmp/bun-copyfile-fd-smoke.XXXXXX); cd \"\$d\"; printf 'copy-fd-ok\\n' > in.txt; cat > smoke.js <<\"EOS\"
+import fs from \"node:fs\";
+const inFd = fs.openSync(\"./in.txt\", \"r\");
+const outFd = fs.openSync(\"./out.txt\", \"w\", 0o644);
+await Bun.write(Bun.file(outFd), Bun.file(inFd));
+fs.closeSync(inFd);
+fs.closeSync(outFd);
+const txt = fs.readFileSync(\"./out.txt\", \"utf8\");
+if (txt !== \"copy-fd-ok\\n\") throw new Error(`unexpected:${txt}`);
+console.log(\"copy-file-fd-smoke-ok\");
+EOS
+${REMOTE_ROOT}/bun run ./smoke.js"
   run_check "Bun npm lockfile migration smoke" \
     ssh "${SSH_OPTS[@]}" "${HOST}" "set -e; d=\$(mktemp -d /tmp/bun-npm-migrate-smoke.XXXXXX); cd \"\$d\"; printf '{\"name\":\"smoke\",\"version\":\"1.0.0\"}\\n' > package.json; printf '{\"name\":\"smoke\",\"version\":\"1.0.0\",\"lockfileVersion\":3,\"requires\":true,\"packages\":{\"\":{\"name\":\"smoke\",\"version\":\"1.0.0\"}}}\\n' > package-lock.json; ${REMOTE_ROOT}/bun install >/tmp/bun-npm-migrate-smoke.log 2>&1; echo npm-migrate-ok:\$d"
 
