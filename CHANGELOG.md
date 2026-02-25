@@ -18,11 +18,6 @@ Historical porting notes and deep engineering logs were moved to `HISTORY.md`.
 - Reduced `getFdPath` workaround blast radius by replacing regular-file FD path lookups with path propagation in installer and user-facing paths (run/router/standalone compile and related install flows).
 - Serialized the OpenBSD cwd-swapping `getFdPath` fallback with a process-global mutex (risk reduction while deeper cleanup is pending).
 
-### Documentation / Planning
-- Split historical engineering notes into `HISTORY.md` and kept `CHANGELOG.md` as the forward-looking change log.
-- Updated release status/priorities to reflect the current fd-path hardening strategy:
-  path propagation first, `getFdPath` fallback minimized, mutex as interim safety.
-
 ### Known Priority Work (in progress)
 - Continue eliminating OpenBSD `getFdPath` fallback usage via path propagation in Bun callsites.
 - Complete source-distfile/offline dependency integration for the real OpenBSD ports build path.
