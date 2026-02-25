@@ -11,5 +11,6 @@ Important:
 
 Source-distfile prep:
 - `source-vendor-prep.sh` prepares a clean-clone OpenCode workspace with filtered Bun deps for ports experiments
-- it emits a source tarball plus a filtered dependency tarball containing `node_modules` and all workspace `packages/*/node_modules` symlink dirs
+- it emits source/vendor tarballs that can be published as `opencode-0.0.1-main-src.tar.gz` and `opencode-0.0.1-main-vendor.tar.gz`
+- the vendor tarball contains `node_modules` and all workspace `packages/*/node_modules` symlink dirs
 - requires `bun`, `node`, `node-gyp`, `python3`, `gmake`, and a spacious `TMPDIR`

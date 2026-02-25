@@ -114,6 +114,10 @@ For source-distfile port experiments (Option 1):
 
 This validates a clean-clone filtered Bun install/build workflow and can produce source + filtered dependency archives for ports experiments. The filtered dependency archive must include `node_modules` plus all workspace `packages/*/node_modules` symlink dirs.
 
+Current published distfiles (tag `v0.0.1-main`):
+- `opencode-0.0.1-main-src.tar.gz`
+- `opencode-0.0.1-main-vendor.tar.gz`
+
 ## Prototype Source-Distfile Ports Build (Local /usr/ports)
 
 The real `/usr/ports/misc/opencode` port can now build a local prototype package from maintainer-prepared source+vendor distfiles (offline during `do-build`).
@@ -127,12 +131,15 @@ Example (on an OpenBSD maintainer host):
   --archive-dir <tmpdir>/opencode-source-prep-artifacts \
   --force
 
-# 2) Copy local distfiles into /usr/ports
+# 2) Use published distfiles (or seed local copies for offline testing)
+# Published release: https://github.com/bstn-r3x/openbsd-opencode-port/releases/tag/v0.0.1-main
 doas mkdir -p /usr/ports/distfiles/opencode
-doas cp <tmpdir>/opencode-source-prep-artifacts/opencode-source-<commit>.tar.gz /usr/ports/distfiles/opencode/
-doas cp <tmpdir>/opencode-source-prep-artifacts/opencode-filtered-deps-<commit>.tar.gz /usr/ports/distfiles/opencode/
+cp <tmpdir>/opencode-source-prep-artifacts/opencode-source-<commit>.tar.gz <tmpdir>/opencode-source-prep-artifacts/opencode-0.0.1-main-src.tar.gz
+cp <tmpdir>/opencode-source-prep-artifacts/opencode-filtered-deps-<commit>.tar.gz <tmpdir>/opencode-source-prep-artifacts/opencode-0.0.1-main-vendor.tar.gz
+doas cp <tmpdir>/opencode-source-prep-artifacts/opencode-0.0.1-main-src.tar.gz /usr/ports/distfiles/opencode/  # optional local seed
+doas cp <tmpdir>/opencode-source-prep-artifacts/opencode-0.0.1-main-vendor.tar.gz /usr/ports/distfiles/opencode/  # optional local seed
 
-# 3) Update distinfo and build package
+# 3) Update distinfo and build package (or just `make fetch` if distinfo is current)
 doas sh -lc 'cd /usr/ports/misc/opencode && make makesum'
 cd /usr/ports/misc/opencode && make clean=all && make package
 ```

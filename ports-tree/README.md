@@ -10,7 +10,7 @@ This directory stores OpenBSD ports-style skeleton files (for example `misc/open
 
 ## Current State
 
-- `misc/opencode/` is a ports-framework prototype source-distfile port (local maintainer distfiles)
+- `misc/opencode/` is a ports-framework prototype source-distfile port (published GitHub Release distfiles)
 - install layout and package metadata were validated locally
-- a local source-distfile prototype build path now works in `/usr/ports`, but published distfiles + final metadata are still required before upstream submission
+- a source-distfile prototype build path now works in `/usr/ports` using published release assets (`v0.0.1-main`), but final metadata/dependencies are still required before upstream submission
 - remaining build blockers include Bun build dependencies, offline dependency provisioning, and source completeness for clean-clone builds

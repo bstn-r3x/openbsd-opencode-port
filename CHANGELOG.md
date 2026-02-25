@@ -20,12 +20,13 @@ Historical porting notes and deep engineering logs were moved to `HISTORY.md`.
 - Serialized the OpenBSD cwd-swapping `getFdPath` fallback with a process-global mutex (risk reduction while deeper cleanup is pending).
 
 ### Ports Prototype
+- Published source/vendor distfiles on GitHub release `v0.0.1-main` (`opencode-0.0.1-main-src.tar.gz`, `opencode-0.0.1-main-vendor.tar.gz`).
 - Prototype source-distfile `/usr/ports` build path now works using local maintainer-prepared source + filtered-deps distfiles.
 - `source-vendor-prep.sh` vendor tarball now includes all workspace `packages/*/node_modules` symlink dirs (fixes missing workspace dependency resolution during ports builds).
 - `misc/opencode` prototype port now builds offline in `do-build` and injects explicit OpenCode version/channel env for non-git distfile builds.
 
 ### Known Priority Work (in progress)
 - Continue eliminating OpenBSD `getFdPath` fallback usage via path propagation in Bun callsites.
-- Replace maintainer-local source/vendor distfiles with published distfiles and finalize ports metadata/dependencies.
+- Finalize ports metadata/dependencies now that published source/vendor distfiles are in place.
 - Improve OpenBSD/tmux ANSI logo rendering (plaintext fallback still used in tmux-safe mode).
 - Continue reducing patch debt and documenting the minimal Bun/OpenBSD patch stack.

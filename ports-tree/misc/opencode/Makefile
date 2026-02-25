@@ -2,10 +2,10 @@
 
 COMMENT =	OpenCode terminal coding assistant
 
-# WIP: local source-distfile prototype for validating an offline ports-framework build
-# using maintainer-prepared source + filtered dependency payload artifacts.
+# WIP: source-distfile prototype for validating an offline ports-framework build
+# using published source + vendor distfiles (currently hosted on GitHub Releases).
 V =		0.0.1
-REVISION =	1
+REVISION =	2
 SRC_COMMIT =	8df9f07
 DISTNAME =	opencode-source-${SRC_COMMIT}
 PKGNAME =	opencode-${V}
@@ -15,17 +15,15 @@ HOMEPAGE =	https://github.com/bstn-r3x/opencode-openbsd
 
 # Target direction (Option 1 selected): source-distfile-based port build.
 #
-# This prototype consumes two local distfiles prepared by:
-#   port/scripts/source-vendor-prep.sh --archive-dir ...
+# This prototype consumes two published distfiles (currently from GitHub Releases):
+# - opencode-${V}-main-src.tar.gz
+# - opencode-${V}-main-vendor.tar.gz
 #
-# Distfiles (local maintainer-prepared artifacts):
-# - opencode-source-${SRC_COMMIT}.tar.gz
-# - opencode-filtered-deps-${SRC_COMMIT}.tar.gz
-#
-# The filtered dependency payload makes do-build offline/reproducible on the port host.
+# The vendor payload (filtered Bun workspace deps + workspace package node_modules symlink dirs)
+# makes do-build offline/reproducible on the port host.
 #
 # Future ports-ready direction:
-# - replace local distfile prep with published source/vendor release artifacts
+# - move published distfiles to a stable upstream/release process
 # - add lang/bun BUILD_DEPENDS once a Bun port exists
 # - finalize license/permit metadata and maintainer
 #
@@ -45,8 +43,9 @@ PERMIT_PACKAGE =	Yes
 ONLY_FOR_ARCHS =	amd64
 
 DIST_SUBDIR =	opencode
-SRC_DISTFILE =	opencode-source-${SRC_COMMIT}.tar.gz
-VENDOR_DISTFILE =	opencode-filtered-deps-${SRC_COMMIT}.tar.gz
+SITES =	https://github.com/bstn-r3x/openbsd-opencode-port/releases/download/v${V}-main/
+SRC_DISTFILE =	opencode-${V}-main-src.tar.gz
+VENDOR_DISTFILE =	opencode-${V}-main-vendor.tar.gz
 DISTFILES =	${SRC_DISTFILE} \
 		${VENDOR_DISTFILE}
 EXTRACT_ONLY =
@@ -77,8 +76,8 @@ MAKE_ENV +=	OPENCODE_VERSION=0.0.0-main-ports.${SRC_COMMIT}
 OPENCODE_BUILD_CMD =	${BUN_BIN} run --cwd packages/opencode script/build.ts --single --skip-install
 OPENCODE_BUILT_BIN =	${WRKDIST}/packages/opencode/dist/opencode-openbsd-x64/bin/opencode
 
-# Local distfiles are expected under ${DISTDIR}/${DIST_SUBDIR}.
-# Example maintainer prep:
+# Distfiles are fetched from ${SITES}; local copies in ${DISTDIR}/${DIST_SUBDIR} are also supported.
+# Example manual seeding for offline tests:
 #   cp <artifacts>/${SRC_DISTFILE} ${DISTDIR}/${DIST_SUBDIR}/
 #   cp <artifacts>/${VENDOR_DISTFILE} ${DISTDIR}/${DIST_SUBDIR}/
 
