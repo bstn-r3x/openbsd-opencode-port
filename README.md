@@ -26,7 +26,9 @@ Do not use:
 - GitHub's default `Source code (tar.gz)` asset
 - `opencode-*-src.tar.gz` or `opencode-*-vendor.tar.gz` (these are maintainer/ports distfiles, not runnable bundles)
 
-Portable bundle releases are published under tags like `openbsd-bundle-<version>`.
+Portable bundle releases are published under tags like `openbsd-bundle-<version>` (for example `openbsd-bundle-0.0.1-main`).
+
+Ports source/dependency distfiles use separate release tags like `v<version>` (for example `v0.0.1-main`).
 
 Quick start:
 
