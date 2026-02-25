@@ -11,6 +11,7 @@ Historical porting notes and deep engineering logs were moved to `HISTORY.md`.
 - Extended fd-path smokes to cover fd-based `Bun.write(Bun.file(...), Bun.file(...))` copy path.
 - Added Bun lockfile migration smokes (npm and yarn) to the OpenBSD baseline validation script.
 - Runtime-validated Bun fd-path hardening on OpenBSD after relinking a rebuilt Bun binary.
+- Added `scripts/build/relink-bun-openbsd.sh` to relink Bun on OpenBSD using a V8 trampoline object (replaces the temporary `llvm-objcopy --redefine-sym` workaround in the maintainer workflow).
 
 ### Bun/OpenBSD Fixes (tracked in `bun-openbsd`)
 - Fixed OpenBSD `poll/ppoll` dispatch to use the correct libc/OpenBSD path.

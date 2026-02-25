@@ -22,9 +22,10 @@ Not available yet:
 ## Immediate Priorities
 
 1. Keep reducing Bun/OpenBSD `getFdPath` fallback usage via path propagation (avoid reverse-resolving regular file FD paths).
-2. Add/maintain Bun OpenBSD fd-path regression smokes in the maintainer validation workflow.
-3. Continue source-distfile ports work (offline dependency provisioning + ports-framework build/install path).
-4. Finish remaining runtime/polish issues (OpenBSD tmux ANSI logo rendering, patch debt reduction).
+2. Keep using the trampoline-based Bun relink helper (`scripts/build/relink-bun-openbsd.sh`) instead of symbol-rewriting `bun-zig.o`.
+3. Add/maintain Bun OpenBSD fd-path regression smokes in the maintainer validation workflow.
+4. Continue source-distfile ports work (offline dependency provisioning + ports-framework build/install path).
+5. Finish remaining runtime/polish issues (OpenBSD tmux ANSI logo rendering, patch debt reduction).
 
 ## Bun/OpenBSD fd-path Hardening Strategy (Current Plan)
 
@@ -51,6 +52,7 @@ Goal: make OpenBSD behavior robust without relying on process-global cwd mutatio
 - Reproducible documented build path
 - Baseline validation passes on OpenBSD
 - Bun OpenBSD fd-path smokes pass on OpenBSD
+- Bun relink (if rebuilt) succeeds with `scripts/build/relink-bun-openbsd.sh`
 - Visible tmux TUI smoke test passes
 - Documentation matches current workflows and artifacts
 
