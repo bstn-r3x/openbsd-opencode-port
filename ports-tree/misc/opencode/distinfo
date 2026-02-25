@@ -1,3 +1,4 @@
-# $OpenBSD$
-
-# local-bootstrap port: no distfiles yet
+SHA256 (opencode/opencode-filtered-deps-8df9f07.tar.gz) = 2bGvKQaQb2N/6XbaNvUugqp4J1R3/hr/rFeKs8Q0P1M=
+SHA256 (opencode/opencode-source-8df9f07.tar.gz) = ybdzhvFt4Qmeg53zqomnhD0GhJICmaBWMHamiBkLfpA=
+SIZE (opencode/opencode-filtered-deps-8df9f07.tar.gz) = 107987768
+SIZE (opencode/opencode-source-8df9f07.tar.gz) = 112184915

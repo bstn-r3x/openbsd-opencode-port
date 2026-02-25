@@ -112,7 +112,32 @@ For source-distfile port experiments (Option 1):
   --force
 ```
 
-This validates a clean-clone filtered Bun install/build workflow and can produce source + filtered dependency archives for ports experiments.
+This validates a clean-clone filtered Bun install/build workflow and can produce source + filtered dependency archives for ports experiments. The filtered dependency archive must include `node_modules` plus all workspace `packages/*/node_modules` symlink dirs.
+
+## Prototype Source-Distfile Ports Build (Local /usr/ports)
+
+The real `/usr/ports/misc/opencode` port can now build a local prototype package from maintainer-prepared source+vendor distfiles (offline during `do-build`).
+
+Example (on an OpenBSD maintainer host):
+
+```sh
+# 1) Prepare artifacts
+./port/scripts/source-vendor-prep.sh \
+  --work-dir <tmpdir>/opencode-source-prep \
+  --archive-dir <tmpdir>/opencode-source-prep-artifacts \
+  --force
+
+# 2) Copy local distfiles into /usr/ports
+doas mkdir -p /usr/ports/distfiles/opencode
+doas cp <tmpdir>/opencode-source-prep-artifacts/opencode-source-<commit>.tar.gz /usr/ports/distfiles/opencode/
+doas cp <tmpdir>/opencode-source-prep-artifacts/opencode-filtered-deps-<commit>.tar.gz /usr/ports/distfiles/opencode/
+
+# 3) Update distinfo and build package
+doas sh -lc 'cd /usr/ports/misc/opencode && make makesum'
+cd /usr/ports/misc/opencode && make clean=all && make package
+```
+
+This is still a maintainer prototype (local distfiles + host-provided Bun via `BUN_BIN`), but it validates a ports-framework source-distfile build/install/package path.
 
 ## Official Ports Status
 

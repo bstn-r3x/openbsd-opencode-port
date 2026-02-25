@@ -10,7 +10,7 @@ using the validated filtered Bun workspace install on OpenBSD.
 
 This script can optionally produce two maintainer artifacts:
 - source tarball (tracked files from git archive)
-- filtered dependency payload tarball (node_modules + packages/opencode/node_modules)
+- filtered dependency payload tarball (node_modules + all workspace packages/*/node_modules symlink dirs)
 
 Options:
   --source-repo PATH   OpenCode source repo to clone
@@ -144,11 +144,13 @@ echo "Running filtered bun install: $FILTER"
 )
 
 NODE_BUN_SIZE=$(cd "$REPO_DIR" && du -sh node_modules/.bun | awk '{print $1}')
-WORKSPACE_NODE_SIZE=$(cd "$REPO_DIR" && du -sh packages/opencode/node_modules | awk '{print $1}')
+OPENCODE_WORKSPACE_NODE_SIZE=$(cd "$REPO_DIR" && du -sh packages/opencode/node_modules | awk '{print $1}')
+WORKSPACE_NODE_DIR_COUNT=$(cd "$REPO_DIR" && find packages -type d -name node_modules | wc -l | tr -d " ")
 
 echo "Filtered dependency payload ready"
 echo "  node_modules/.bun: $NODE_BUN_SIZE"
-echo "  packages/opencode/node_modules: $WORKSPACE_NODE_SIZE"
+echo "  packages/opencode/node_modules: $OPENCODE_WORKSPACE_NODE_SIZE"
+echo "  workspace package node_modules dirs: $WORKSPACE_NODE_DIR_COUNT"
 
 BUILD_VERSION=""
 if [ "$RUN_BUILD_SMOKE" -eq 1 ]; then
@@ -180,7 +182,7 @@ if [ -n "$ARCHIVE_DIR" ]; then
   echo "Creating filtered dependency payload tarball..."
   (
     cd "$REPO_DIR"
-    tar -czf "$VENDOR_TARBALL" node_modules packages/opencode/node_modules
+    tar -czf "$VENDOR_TARBALL" node_modules $(find packages -type d -name node_modules | sort)
   )
 
   sha256 "$SRC_TARBALL" "$VENDOR_TARBALL" > "$SHA_FILE"
@@ -199,7 +201,8 @@ tmpdir=$TMPDIR_PATH
 bun=$BUN_BIN
 filter=$FILTER
 node_modules_bun_size=$NODE_BUN_SIZE
-packages_opencode_node_modules_size=$WORKSPACE_NODE_SIZE
+packages_opencode_node_modules_size=$OPENCODE_WORKSPACE_NODE_SIZE
+workspace_node_modules_dirs=$WORKSPACE_NODE_DIR_COUNT
 build_smoke=$( [ "$RUN_BUILD_SMOKE" -eq 1 ] && echo yes || echo no )
 build_version=$BUILD_VERSION
 archive_dir=$ARCHIVE_DIR

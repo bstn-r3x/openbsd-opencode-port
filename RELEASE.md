@@ -17,14 +17,14 @@ Not available yet:
 - Official ports-tree port implementation is incomplete (source-distfile/build metadata still in progress)
 - Bun/OpenBSD `getFdPath` still relies on an OpenBSD directory-FD fallback that swaps process cwd (`fchdir + getcwd + restore`)
 - OpenBSD/tmux ANSI logo rendering is still imperfect (plaintext fallback used in tmux-safe mode)
-- Source-distfile/offline dependency workflow for the final ports build path is not fully wired into `/usr/ports/misc/opencode`
+- Published source/vendor distfiles and final ports metadata are not ready yet (local `/usr/ports` source-distfile prototype now builds)
 
 ## Immediate Priorities
 
 1. Keep reducing Bun/OpenBSD `getFdPath` fallback usage via path propagation (avoid reverse-resolving regular file FD paths).
 2. Keep using the trampoline-based Bun relink helper (`scripts/build/relink-bun-openbsd.sh`) instead of symbol-rewriting `bun-zig.o`.
 3. Add/maintain Bun OpenBSD fd-path regression smokes in the maintainer validation workflow.
-4. Continue source-distfile ports work (offline dependency provisioning + ports-framework build/install path).
+4. Replace maintainer-local source/vendor distfiles with published distfiles and finalize ports metadata/dependencies.
 5. Finish remaining runtime/polish issues (OpenBSD tmux ANSI logo rendering, patch debt reduction).
 
 ## Bun/OpenBSD fd-path Hardening Strategy (Current Plan)
