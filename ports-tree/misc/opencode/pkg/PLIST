@@ -3,3 +3,5 @@
 @bin libexec/opencode/opencode-bin
 share/doc/opencode/README.txt
 share/doc/opencode/TROUBLESHOOTING.txt
+share/doc/opencode/LICENSE.txt
+share/doc/opencode/THIRD-PARTY-NOTICES.txt

@@ -5,7 +5,8 @@ COMMENT =	OpenCode terminal coding assistant (local bootstrap port)
 # WIP: local-bootstrap port for validating a ports-framework package/install layout
 # using a locally built OpenCode binary while the final distfile/source build strategy
 # is implemented.
-V =		0.0.0
+V =		0.0.1
+REVISION =	0
 DISTNAME =	opencode-${V}
 PKGNAME =	opencode-${V}
 CATEGORIES =	misc
@@ -63,5 +64,7 @@ do-install:
 	chmod 755 ${PREFIX}/libexec/opencode/opencode-bin
 	${INSTALL_DATA} ${FILESDIR}/README.txt ${PREFIX}/share/doc/opencode/README.txt
 	${INSTALL_DATA} ${FILESDIR}/TROUBLESHOOTING.txt ${PREFIX}/share/doc/opencode/TROUBLESHOOTING.txt
+	${INSTALL_DATA} ${FILESDIR}/LICENSE.txt ${PREFIX}/share/doc/opencode/LICENSE.txt
+	${INSTALL_DATA} ${FILESDIR}/THIRD-PARTY-NOTICES.txt ${PREFIX}/share/doc/opencode/THIRD-PARTY-NOTICES.txt
 
 .include <bsd.port.mk>

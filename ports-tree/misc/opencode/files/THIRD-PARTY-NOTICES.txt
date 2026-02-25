@@ -1,0 +1,11 @@
+Third-party notices (summary)
+
+This package installs an OpenCode binary built from the OpenBSD porting forks.
+License texts and notices may apply to OpenCode, Bun, OpenTUI, and their dependencies.
+
+Repository-level license files:
+- openbsd-opencode-port (project hub): LICENSE (MIT)
+- opencode-openbsd: LICENSE (MIT)
+- bun-openbsd: LICENSE.md (includes Bun + JavaScriptCore/WebKit notice details)
+
+For full source and license context, see the published project repositories.
