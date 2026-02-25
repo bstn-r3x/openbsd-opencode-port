@@ -1,8 +1,7 @@
-# OpenCode on OpenBSD (perosnal project)
+# OpenCode on OpenBSD (personal project)
 
-This repository is my project for running the OpenCode on OpenBSD.
-I started it for experiment with Claude and now continue with Codex. 
-It seems to work fine so far and I will try to continue to polish it when I have some spare time.
+This repository documents and packages my OpenCode-on-OpenBSD work.
+It includes user-facing portable bundles, maintainer packaging workflows, and a prototype OpenBSD port path.
 
 It contains:
 - release and status docs
@@ -19,11 +18,15 @@ It does not contain full Bun/OpenCode source history or official OpenBSD package
 
 ## For Users (Run OpenCode on OpenBSD Today)
 
-Download the portable release assets from GitHub Releases:
+Download the portable bundle assets from GitHub Releases (look for assets named exactly):
 - `opencode-openbsd-amd64-<version>.tgz`
 - `opencode-openbsd-amd64-<version>.tgz.sha256`
 
-Do not use GitHub's default `Source code (tar.gz)` asset for running OpenCode.
+Do not use:
+- GitHub's default `Source code (tar.gz)` asset
+- `opencode-*-src.tar.gz` or `opencode-*-vendor.tar.gz` (these are maintainer/ports distfiles, not runnable bundles)
+
+Portable bundle releases are published under tags like `openbsd-bundle-<version>`.
 
 Quick start:
 
